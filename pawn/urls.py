@@ -68,10 +68,10 @@ staff = [
     path("admin/backups/", V.backups, name="backups"),
     path("admin/sms/", V.sms_log, name="sms_log"),
 ]
-for key, (lst, edit, delete) in V.CRUDS.items():
+for key, (lst, new, edit, delete) in V.CRUDS.items():
     staff += [
         path(f"admin/{key}/", lst, name=f"{key}_list"),
-        path(f"admin/{key}/new/", edit, name=f"{key}_new"),
+        path(f"admin/{key}/new/", new, name=f"{key}_new"),
         path(f"admin/{key}/<int:pk>/edit/", edit, name=f"{key}_edit"),
         path(f"admin/{key}/<int:pk>/delete/", delete, name=f"{key}_delete"),
     ]

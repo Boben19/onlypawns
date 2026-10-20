@@ -78,6 +78,14 @@ These are the open questions from the build guide. The choices made here are eas
 - **Google Sign-In:** put your OAuth client ID in `GOOGLE_CLIENT_ID` (Google Cloud Console, OAuth client of type Web, add your site as an authorized JavaScript origin). With no ID, the app asks for the Google email directly so you can still demo. Never leave it in that mode on a public server.
 - **Interest rates, grace days, fees:** edit them under Admin, Rates and categories. The interest and grace numbers in the guide still need real references (BSP rules, actual shop practice) for the written defense.
 
+## Lists: search, sort, paging
+
+Every staff list has a search box (`q`, matches any of several fields), a "Sort by" dropdown that remembers your choice, and paging (20 per page). Sorting only accepts the fields offered in the dropdown. The admin screens (branches, categories, currencies, exchange rates, accepted IDs) are class-based views (`ListView`, `CreateView`, `UpdateView`, `DeleteView`) in `pawn/views_staff.py`; the other screens are function views that share the same `search_qs`, `sort_qs` and `paginate` helpers and the `includes/search_sort.html` and `includes/pagination.html` templates. The staff dashboard shows real totals, including this year's registrations and tickets.
+
+## Deploying
+
+See `DEPLOY.md` (PythonAnywhere).
+
 ## Scheduled jobs
 
 Run both every night. Linux cron:

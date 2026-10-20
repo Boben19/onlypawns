@@ -24,6 +24,8 @@ env = os.environ.get
 SECRET_KEY = env("SECRET_KEY", "only-pawns-dev-key-please-change-this-in-production-1234567890")
 DEBUG = env("DEBUG", "1") == "1"
 ALLOWED_HOSTS = [h.strip() for h in env("ALLOWED_HOSTS", "*").split(",") if h.strip()]
+# Needed when the site is served over HTTPS on another domain, e.g. https://yourname.pythonanywhere.com
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in env("CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -73,6 +75,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
 ]
 LOGIN_URL = "/staff/login/"
+LOGIN_REDIRECT_URL = "/staff/"
+LOGOUT_REDIRECT_URL = "/staff/login/"
 
 LANGUAGE_CODE = "en"
 TIME_ZONE = "Asia/Manila"

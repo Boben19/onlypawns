@@ -16,6 +16,14 @@
   {% if user.role_name != 'Appraiser' %}<div class="card flat"><div class="kpi"><a href="/staff/support/">{{ support_open }}</a><small>open help requests</small></div></div>{% endif %}
   <div class="card flat"><div class="kpi">{{ for_auction }}<small>expired, waiting for auction</small></div></div>
 </div>
+<h2>{{ year }} at a glance</h2>
+<div class="grid g3" style="margin:14px 0">
+  <div class="card flat"><div class="kpi">{{ customers_total }}<small>customers in total</small></div></div>
+  <div class="card flat"><div class="kpi">{{ customers_this_year }}<small>customers registered this year</small></div></div>
+  <div class="card flat"><div class="kpi">{{ tickets_this_year }}<small>pawn tickets issued this year</small></div></div>
+  <div class="card flat"><div class="kpi">{{ branch_count }}<small>active branches</small></div></div>
+  <div class="card flat"><div class="kpi">{{ category_count }}<small>item categories</small></div></div>
+</div>
 <div class="card flat"><h2>Latest transactions</h2><div class="tbl-wrap"><table class="tbl">
 <tr><th>No.</th><th>Type</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
 {% for t in recent %}<tr><td><a href="/staff/transactions/{{ t.pk }}/">{{ t.transaction_no }}</a></td><td>{{ t.transaction_type }}</td><td>{{ t.customer.full_name }}</td><td class="mono">{{ t.amount|peso }}</td><td><span class="badge {{ t.status|badge }}">{{ t.status }}</span></td></tr>

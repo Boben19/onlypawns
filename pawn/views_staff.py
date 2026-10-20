@@ -7,8 +7,10 @@ from django.core.paginator import Paginator
 from django.db.models import Count, ProtectedError, Q, Sum
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from . import forms as F
 from . import services as S
@@ -40,14 +42,36 @@ def staff_only(*roles):
 
 
 def paginate(request, qs, per=20):
+    if hasattr(qs, "ordered") and not qs.ordered:
+        qs = qs.order_by("pk")          # stable pages even when the model has no default ordering
     page = Paginator(qs, per).get_page(request.GET.get("page"))
     params = request.GET.copy()
     params.pop("page", None)
     return page, params.urlencode()
 
 
+def search_qs(request, qs, fields):
+    """Search box (?q=). Q objects give OR logic: a record matches if ANY listed field contains the text."""
+    q = request.GET.get("q", "").strip()
+    if q and fields:
+        cond = Q()
+        for f in fields:
+            cond |= Q(**{f"{f}__icontains": q})
+        qs = qs.filter(cond)
+    return qs
+
+
+def sort_qs(request, qs, options):
+    """Sort dropdown (?sort_by=). Only fields listed in `options` are accepted, anything else is ignored."""
+    chosen = request.GET.get("sort_by", "")
+    if chosen in [value for value, _ in options]:
+        return qs.order_by(chosen, "pk")
+    return qs
+
+
 def table(request, title, headers, rows, page=None, qs="", **extra):
-    ctx = {"title": title, "headers": headers, "rows": rows, "page": page, "qs": qs}
+    ctx = {"title": title, "headers": headers, "rows": rows, "page": page, "qs": qs,
+           "sort_by": request.GET.get("sort_by", "")}
     ctx.update(extra)
     return render(request, "staff/table.html", ctx)
 
@@ -118,25 +142,35 @@ def dashboard(request):
         "for_auction": PawnTicket.objects.filter(status="Expired").count(),
         "recent": Transaction.objects.select_related("customer", "transaction_type").order_by("-created_at")[:8],
         "pending_appraisals": Appraisal.objects.filter(result="Pending").count(),
+        # real totals for the "this year" cards
+        "customers_total": Customer.objects.count(),
+        "customers_this_year": Customer.objects.filter(registered_at__year=today.year).count(),
+        "tickets_this_year": PawnTicket.objects.filter(loan_date__year=today.year).count(),
+        "branch_count": Branch.objects.filter(status="Active").count(),
+        "category_count": ItemCategory.objects.count(),
+        "year": today.year,
     }
     return render(request, "staff/dashboard.html", ctx)
 
 
 # --------------------------------------------------------------------------- customers
+CUSTOMER_SORT = [("last_name", "Name (A to Z)"), ("-registered_at", "Newest first"), ("registered_at", "Oldest first"),
+                 ("status", "Status")]
+
+
 @staff_only(CASHIER, APPRAISER)
 def customers(request):
-    qs = Customer.objects.all()
-    q = request.GET.get("q", "").strip()
+    qs = search_qs(request, Customer.objects.all(), ["first_name", "last_name", "code", "mobile_no", "email"])
     st = request.GET.get("status", "")
-    if q:
-        qs = qs.filter(Q(first_name__icontains=q) | Q(last_name__icontains=q) | Q(code__icontains=q) | Q(mobile_no__icontains=q))
     if st:
         qs = qs.filter(status=st)
+    qs = sort_qs(request, qs, CUSTOMER_SORT)
     page, qstr = paginate(request, qs)
     rows = [{"cells": [c.code, c.full_name, c.mobile_no, c.status, f"{c.registered_at:%b %d, %Y}"], "url": f"/staff/customers/{c.pk}/",
              "badge": 3} for c in page]
     return table(request, "Customers", ["ID", "Name", "Mobile", "Status", "Registered"], rows, page, qstr,
-                 search=True, filter_name="status", filter_options=["Pending Verification", "Active", "Deactivated"],
+                 search=True, sort_options=CUSTOMER_SORT,
+                 filter_name="status", filter_options=["Pending Verification", "Active", "Deactivated"],
                  add_url="/staff/customers/new/", add_label="Register customer")
 
 
@@ -215,13 +249,21 @@ def id_image(request, pk, side):
 
 
 # ---------------------------------------------------------------------------- appraisal
+APPRAISAL_SORT = [("-created_at", "Newest first"), ("created_at", "Oldest first"), ("-appraised_value", "Highest value"),
+                  ("appraised_value", "Lowest value"), ("result", "Result")]
+
+
 @staff_only(APPRAISER, CASHIER)
 def appraisals(request):
     qs = Appraisal.objects.select_related("item", "item__customer", "appraiser")
+    qs = search_qs(request, qs, ["transaction__transaction_no", "item__customer__first_name", "item__customer__last_name",
+                                 "item__item_type", "result"])
+    qs = sort_qs(request, qs, APPRAISAL_SORT)
     page, qstr = paginate(request, qs)
     rows = [{"cells": [a.transaction.transaction_no, a.item.customer.full_name, a.item.item_type, P(a.appraised_value),
                        P(a.suggested_loan), a.result], "url": f"/staff/appraisals/{a.pk}/", "badge": 5} for a in page]
     return table(request, "Appraisals", ["Transaction", "Customer", "Item", "Appraised", "Suggested loan", "Result"], rows, page, qstr,
+                 search=True, sort_options=APPRAISAL_SORT,
                  add_url="/staff/appraisals/new/" if request.user.role_name in (APPRAISER, ADMIN) else None,
                  add_label="New appraisal")
 
@@ -272,18 +314,23 @@ def appraisal_action(request, pk):
 
 
 # ------------------------------------------------------------------------------- tickets
+TICKET_SORT = [("-created_at", "Newest first"), ("maturity_date", "Maturity (soonest)"), ("-loan_amount", "Loan (high to low)"),
+               ("loan_amount", "Loan (low to high)"), ("status", "Status")]
+
+
 @staff_only(CASHIER, APPRAISER)
 def tickets(request):
     qs = PawnTicket.objects.select_related("customer", "item")
-    q, st = request.GET.get("q", "").strip(), request.GET.get("status", "")
-    if q:
-        qs = qs.filter(Q(ticket_no__icontains=q) | Q(customer__last_name__icontains=q) | Q(customer__first_name__icontains=q))
+    qs = search_qs(request, qs, ["ticket_no", "customer__last_name", "customer__first_name", "item__item_type"])
+    st = request.GET.get("status", "")
     if st:
         qs = qs.filter(status=st)
+    qs = sort_qs(request, qs, TICKET_SORT)
     page, qstr = paginate(request, qs)
     rows = [{"cells": [t.ticket_no, t.customer.full_name, t.item.item_type, P(t.loan_amount), f"{t.maturity_date:%b %d, %Y}", t.status],
              "url": f"/staff/tickets/{t.pk}/", "badge": 5} for t in page]
     return table(request, "Pawn tickets", ["Ticket", "Customer", "Item", "Loan", "Maturity", "Status"], rows, page, qstr, search=True,
+                 sort_options=TICKET_SORT,
                  filter_name="status", filter_options=["Active", "Renewed", "Redeemed", "Expired", "For Auction", "Auctioned"])
 
 
@@ -457,16 +504,22 @@ def auction_result(request, pk):
 
 
 # ----------------------------------------------------------------------------- cash ledger
+LEDGER_SORT = [("-recorded_at", "Newest first"), ("recorded_at", "Oldest first"), ("-amount", "Largest amount"),
+               ("amount", "Smallest amount")]
+
+
 @staff_only(CASHIER)
 def ledger_view(request):
     qs = CashLedger.objects.select_related("branch", "recorded_by")
     if not request.user.is_admin_role:
         qs = qs.filter(branch=request.emp.branch)
+    qs = search_qs(request, qs, ["description", "category", "branch__branch_name", "recorded_by__first_name", "recorded_by__last_name"])
+    qs = sort_qs(request, qs, LEDGER_SORT)
     page, qstr = paginate(request, qs, 25)
     rows = [{"cells": [f"{timezone.localtime(l.recorded_at):%b %d %I:%M %p}", l.branch.branch_name, l.direction, l.category,
                        l.description, P(l.amount), l.recorded_by.full_name], "badge": 2} for l in page]
     return table(request, "Cash ledger", ["When", "Branch", "Direction", "Category", "Description", "Amount", "By"], rows, page, qstr,
-                 add_url="/staff/ledger/new/", add_label="Record expense or refund")
+                 search=True, sort_options=LEDGER_SORT, add_url="/staff/ledger/new/", add_label="Record expense or refund")
 
 
 @staff_only(CASHIER)
@@ -519,15 +572,21 @@ def report_view(request, name):
 
 
 # ---------------------------------------------------------------------------------- support
+SUPPORT_SORT = [("-created_at", "Newest first"), ("created_at", "Oldest first"), ("priority", "Priority"), ("status", "Status")]
+
+
 @staff_only(CASHIER)
 def support(request):
     qs = SupportTicket.objects.select_related("customer")
+    qs = search_qs(request, qs, ["subject", "customer__first_name", "customer__last_name", "category"])
     if request.GET.get("status"):
         qs = qs.filter(status=request.GET["status"])
+    qs = sort_qs(request, qs, SUPPORT_SORT)
     page, qstr = paginate(request, qs)
     rows = [{"cells": [s.subject, s.customer.full_name, s.category, s.priority, s.status, f"{s.created_at:%b %d}"],
              "url": f"/staff/support/{s.pk}/", "badge": 4} for s in page]
     return table(request, "Pawn Patrol", ["Subject", "Customer", "Category", "Priority", "Status", "Opened"], rows, page, qstr,
+                 search=True, sort_options=SUPPORT_SORT,
                  filter_name="status", filter_options=["Open", "In Progress", "Resolved"])
 
 
@@ -558,59 +617,159 @@ def queue_adjust(request, pk):
 
 
 # ------------------------------------------------------------------- admin: simple CRUD
-def make_crud(key, model, form_cls, title, headers, row_fn, roles=(ADMIN,)):
-    @staff_only(*roles)
-    def lst(request):
-        rows = []
-        for o in model.objects.all():
-            rows.append({"cells": row_fn(o), "url": f"/staff/admin/{key}/{o.pk}/edit/", "delete": f"/staff/admin/{key}/{o.pk}/delete/"})
-        return table(request, title, headers, rows, add_url=f"/staff/admin/{key}/new/", add_label="Add")
+# Class-based views: ListView / CreateView / UpdateView / DeleteView. Search lives in get_queryset() (with Q),
+# sorting in get_ordering() (whitelist), paging in paginate_by.
+class StaffRoleMixin:
+    """Same rules as @staff_only (login, employee record, role check) for class-based views."""
+    roles = (ADMIN,)
 
-    @staff_only(*roles)
-    def edit(request, pk=None):
-        obj = get_object_or_404(model, pk=pk) if pk else None
-        form = form_cls(request.POST or None, instance=obj)
-        if request.method == "POST" and form.is_valid():
-            saved = form.save()
-            S.audit(request.user, "UPDATE" if obj else "CREATE", model._meta.db_table.replace("pawn_", ""), saved.pk)
-            messages.success(request, "Saved.")
-            return redirect(f"{key}_list")
-        return form_page(request, f"{'Edit' if obj else 'Add'}: {title}", form, f"/staff/admin/{key}/")
+    def dispatch(self, request, *args, **kwargs):
+        def call(request, *a, **kw):
+            return super(StaffRoleMixin, self).dispatch(request, *a, **kw)
+        return staff_only(*self.roles)(call)(request, *args, **kwargs)
 
-    @staff_only(*roles)
-    @require_POST
-    def delete(request, pk):
-        obj = get_object_or_404(model, pk=pk)
+
+class CrudBase(StaffRoleMixin):
+    key = ""            # url prefix and url-name prefix, e.g. "branches"
+    title = ""
+    headers = ()
+    row_fn = None       # object -> list of cells
+    search_fields = ()
+    sort_options = ()
+    model = None
+    form_class = None
+
+    def audit_table(self):
+        return self.model._meta.db_table.replace("pawn_", "")
+
+
+class CrudList(CrudBase, ListView):
+    template_name = "staff/table.html"
+    paginate_by = 20
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        q = self.request.GET.get("q", "").strip()
+        if q and self.search_fields:
+            cond = Q()
+            for f in self.search_fields:
+                cond |= Q(**{f"{f}__icontains": q})
+            qs = qs.filter(cond)
+        return qs if qs.ordered else qs.order_by("pk")
+
+    def get_ordering(self):
+        sort_by = self.request.GET.get("sort_by", "")
+        if sort_by in [value for value, _ in self.sort_options]:
+            return [sort_by, "pk"]
+        return super().get_ordering()
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        page = ctx["page_obj"]
+        params = self.request.GET.copy()
+        params.pop("page", None)
+        ctx.update({
+            "title": self.title, "headers": list(self.headers), "page": page, "qs": params.urlencode(),
+            "rows": [{"cells": self.row_fn(o), "url": reverse(f"{self.key}_edit", args=[o.pk]),
+                      "delete": reverse(f"{self.key}_delete", args=[o.pk])} for o in page],
+            "search": bool(self.search_fields), "sort_options": list(self.sort_options),
+            "sort_by": self.request.GET.get("sort_by", ""),
+            "add_url": reverse(f"{self.key}_new"), "add_label": "Add",
+        })
+        return ctx
+
+
+class CrudFormMixin(CrudBase):
+    template_name = "staff/form.html"
+
+    def get_success_url(self):
+        return reverse(f"{self.key}_list")
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({"title": f"{'Edit' if getattr(self, 'object', None) else 'Add'}: {self.title}",
+                    "back": reverse(f"{self.key}_list"), "multipart": False, "submit": "Save", "note": ""})
+        return ctx
+
+    def form_valid(self, form):
+        creating = self.object is None
+        response = super().form_valid(form)          # saves the record and returns the redirect
+        S.audit(self.request.user, "CREATE" if creating else "UPDATE", self.audit_table(), self.object.pk)
+        messages.success(self.request, "Saved.")
+        return response
+
+
+class CrudCreate(CrudFormMixin, CreateView):
+    pass
+
+
+class CrudUpdate(CrudFormMixin, UpdateView):
+    pass
+
+
+class CrudDelete(CrudBase, DeleteView):
+    http_method_names = ["post"]        # deleting is POST only, the confirm dialog is in the list page
+
+    def get_success_url(self):
+        return reverse(f"{self.key}_list")
+
+    def form_valid(self, form):
+        pk = self.object.pk
         try:
-            obj.delete()
-            S.audit(request.user, "DELETE", model._meta.db_table.replace("pawn_", ""), pk)
-            messages.success(request, "Deleted.")
+            self.object.delete()
+            S.audit(self.request.user, "DELETE", self.audit_table(), pk)
+            messages.success(self.request, "Deleted.")
         except ProtectedError:
-            messages.error(request, "That record is already used by other data, so it can't be deleted.")
-        return redirect(f"{key}_list")
+            messages.error(self.request, "That record is already used by other data, so it can't be deleted.")
+        return redirect(self.get_success_url())
 
-    return lst, edit, delete
+
+def make_crud(key, model, form_cls, title, headers, row_fn, search_fields, sort_options, roles=(ADMIN,)):
+    cfg = dict(key=key, model=model, title=title, headers=headers, row_fn=row_fn, roles=roles)
+    lst = CrudList.as_view(search_fields=search_fields, sort_options=sort_options, **cfg)
+    new = CrudCreate.as_view(form_class=form_cls, **cfg)
+    edit = CrudUpdate.as_view(form_class=form_cls, **cfg)
+    delete = CrudDelete.as_view(**cfg)
+    return lst, new, edit, delete
 
 
 CRUDS = {
     "branches": make_crud("branches", Branch, F.BranchForm, "Branches", ["Branch", "Address", "Hours", "Counters", "Status"],
-                          lambda b: [b.branch_name, b.address, f"{b.open_time:%I:%M %p} - {b.close_time:%I:%M %p}", b.open_counters, b.status]),
+                          lambda b: [b.branch_name, b.address, f"{b.open_time:%I:%M %p} - {b.close_time:%I:%M %p}", b.open_counters, b.status],
+                          ["branch_name", "address", "contact_no", "status"],
+                          [("branch_name", "Branch"), ("address", "Address"), ("status", "Status")]),
     "categories": make_crud("categories", ItemCategory, F.CategoryForm, "Item categories and rates",
                             ["Category", "Monthly interest", "Service fee", "Grace (days)"],
-                            lambda c: [c.category_name, f"{c.monthly_interest_rate * 100:.2f}%", P(c.service_fee), c.grace_period_days]),
+                            lambda c: [c.category_name, f"{c.monthly_interest_rate * 100:.2f}%", P(c.service_fee), c.grace_period_days],
+                            ["category_name"],
+                            [("category_name", "Category"), ("-monthly_interest_rate", "Interest (high to low)"),
+                             ("service_fee", "Service fee"), ("grace_period_days", "Grace days")]),
     "currencies": make_crud("currencies", Currency, F.CurrencyForm, "Currencies", ["Code", "Name", "Symbol", "Rate to PHP"],
-                            lambda c: [c.code, c.name, c.symbol, f"{c.rate():.4f}"]),
+                            lambda c: [c.code, c.name, c.symbol, f"{c.rate():.4f}"],
+                            ["code", "name", "symbol"], [("code", "Code"), ("name", "Name")]),
     "rates": make_crud("rates", ExchangeRate, F.RateForm, "Exchange rates", ["Currency", "Rate to PHP", "Effective"],
-                       lambda r: [r.currency.code, f"{r.rate_to_php:.4f}", str(r.effective_date)]),
-    "idtypes": make_crud("idtypes", IDType, F.IDTypeForm, "Accepted IDs", ["ID type"], lambda i: [i.id_type_name]),
+                       lambda r: [r.currency.code, f"{r.rate_to_php:.4f}", str(r.effective_date)],
+                       ["currency__code", "currency__name"],
+                       [("currency__code", "Currency"), ("-effective_date", "Newest first"), ("-rate_to_php", "Rate (high to low)")]),
+    "idtypes": make_crud("idtypes", IDType, F.IDTypeForm, "Accepted IDs", ["ID type"], lambda i: [i.id_type_name],
+                         ["id_type_name"], [("id_type_name", "ID type")]),
 }
+
+
+EMPLOYEE_SORT = [("last_name", "Name (A to Z)"), ("branch__branch_name", "Branch"), ("-date_hired", "Newest hire"),
+                 ("status", "Status")]
 
 
 @staff_only(ADMIN)
 def employees(request):
+    qs = Employee.objects.select_related("user", "user__role", "branch")
+    qs = search_qs(request, qs, ["first_name", "last_name", "user__username", "position", "branch__branch_name"])
+    qs = sort_qs(request, qs, EMPLOYEE_SORT)
+    page, qstr = paginate(request, qs)
     rows = [{"cells": [e.full_name, e.user.username, e.user.role_name, e.branch.branch_name, e.status],
-             "url": f"/staff/admin/employees/{e.pk}/edit/", "badge": 4} for e in Employee.objects.select_related("user", "user__role", "branch")]
-    return table(request, "Employees", ["Name", "Username", "Role", "Branch", "Status"], rows,
+             "url": f"/staff/admin/employees/{e.pk}/edit/", "badge": 4} for e in page]
+    return table(request, "Employees", ["Name", "Username", "Role", "Branch", "Status"], rows, page, qstr,
+                 search=True, sort_options=EMPLOYEE_SORT,
                  add_url="/staff/admin/employees/new/", add_label="Add employee")
 
 
@@ -626,15 +785,18 @@ def employee_edit(request, pk=None):
     return form_page(request, "Edit employee" if emp else "Add employee", form, "/staff/admin/employees/")
 
 
+AUDIT_SORT = [("-logged_at", "Newest first"), ("logged_at", "Oldest first"), ("action", "Action"), ("table_name", "Table")]
+
+
 @staff_only(ADMIN)
 def audit_log(request):
-    qs = AuditLog.objects.select_related("user")
-    if request.GET.get("q"):
-        qs = qs.filter(Q(table_name__icontains=request.GET["q"]) | Q(action__icontains=request.GET["q"]) | Q(user__username__icontains=request.GET["q"]))
+    qs = search_qs(request, AuditLog.objects.select_related("user"), ["table_name", "action", "user__username"])
+    qs = sort_qs(request, qs, AUDIT_SORT)
     page, qstr = paginate(request, qs, 30)
     rows = [{"cells": [f"{timezone.localtime(a.logged_at):%b %d %I:%M:%S %p}", a.user.username if a.user else "system", a.action,
                        a.table_name, a.record_id or "", str(a.new_value or "")[:70]]} for a in page]
-    return table(request, "Audit log", ["When", "User", "Action", "Table", "Record", "Change"], rows, page, qstr, search=True)
+    return table(request, "Audit log", ["When", "User", "Action", "Table", "Record", "Change"], rows, page, qstr, search=True,
+                 sort_options=AUDIT_SORT)
 
 
 @staff_only(ADMIN)
@@ -649,9 +811,15 @@ def backups(request):
     return table(request, "Backups", ["Run at", "File", "Size", "Status"], rows, backup=True)
 
 
+SMS_SORT = [("-sent_at", "Newest first"), ("sent_at", "Oldest first"), ("status", "Status"), ("message_type", "Type")]
+
+
 @staff_only(ADMIN)
 def sms_log(request):
-    page, qstr = paginate(request, SMSLog.objects.select_related("customer"), 25)
+    qs = search_qs(request, SMSLog.objects.select_related("customer"),
+                   ["message", "message_type", "customer__first_name", "customer__last_name"])
+    page, qstr = paginate(request, sort_qs(request, qs, SMS_SORT), 25)
     rows = [{"cells": [f"{timezone.localtime(s.sent_at):%b %d %I:%M %p}", s.customer.full_name, s.message_type, s.message[:90], s.status],
              "badge": 4} for s in page]
-    return table(request, "SMS log", ["Sent", "Customer", "Type", "Message", "Status"], rows, page, qstr)
+    return table(request, "SMS log", ["Sent", "Customer", "Type", "Message", "Status"], rows, page, qstr,
+                 search=True, sort_options=SMS_SORT)

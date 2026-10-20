@@ -5,17 +5,12 @@
 {% if backup %}<form method="post">{% csrf_token %}<button class="btn">Back up now</button></form>{% endif %}</span></div>
 {% if report %}<form class="search no-print" method="get">{% if date_filter %}<input class="in" type="date" name="start" value="{{ start }}"><input class="in" type="date" name="end" value="{{ end }}"><button class="btn ghost sm">Apply</button>{% endif %}
 <a class="btn ghost sm" href="?start={{ start }}&end={{ end }}&fmt=pdf">Download PDF</a><a class="btn ghost sm" href="?start={{ start }}&end={{ end }}&fmt=xlsx">Download Excel</a><button type="button" class="btn ghost sm" onclick="print()">Print</button></form>{% endif %}
-{% if search or filter_name %}<form class="search" method="get">
-{% if search %}<input class="in" name="q" value="{{ request.GET.q }}" placeholder="Search" aria-label="Search">{% endif %}
-{% if filter_name %}<select class="in" name="{{ filter_name }}" aria-label="Filter" style="max-width:200px"><option value="">All</option>{% for o in filter_options %}<option {% if request.GET|get_item:filter_name == o %}selected{% endif %}>{{ o }}</option>{% endfor %}</select>{% endif %}
-<button class="btn ghost sm">Filter</button></form>{% endif %}
+{% include "includes/search_sort.html" %}
 <div class="card flat"><div class="tbl-wrap"><table class="tbl"><thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead><tbody>
 {% for row in rows %}<tr>{% for c in row.cells %}<td class="{% if forloop.counter0 > 2 %}mono{% endif %}">
 {% if forloop.counter0 == row.badge %}<span class="badge {{ c|badge }}">{{ c }}</span>{% elif forloop.first and row.url %}<a href="{{ row.url }}">{{ c }}</a>{% else %}{{ c }}{% endif %}</td>{% endfor %}
 <td class="right">{% if row.delete %}<form method="post" action="{{ row.delete }}" style="display:inline">{% csrf_token %}<button class="btn danger sm" data-confirm="Delete this record? This can't be undone." data-ok="Delete">Delete</button></form>{% endif %}</td></tr>
-{% empty %}<tr><td colspan="{{ headers|length|add:1 }}" class="soft">Nothing here yet.</td></tr>{% endfor %}</tbody></table></div>
+{% empty %}<tr><td colspan="{{ headers|length|add:1 }}" class="soft">{% if request.GET.q %}No records match "{{ request.GET.q }}".{% else %}No records found.{% endif %}</td></tr>{% endfor %}</tbody></table></div>
 {% for s in summary %}<p class="sum" style="margin-bottom:0">{{ s }}</p>{% endfor %}</div>
-{% if page and page.paginator.num_pages > 1 %}<div class="pager"><span class="soft small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
-{% if page.has_previous %}<a class="btn ghost sm" href="?{{ qs }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}
-{% if page.has_next %}<a class="btn ghost sm" href="?{{ qs }}&page={{ page.next_page_number }}">Next</a>{% endif %}</div>{% endif %}
+{% include "includes/pagination.html" %}
 {% endblock %}

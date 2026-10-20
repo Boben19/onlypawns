@@ -1,0 +1,5 @@
+{% load pawn_extras %}{% if search or filter_name or sort_options %}<form class="search no-print" method="get">
+{% if search %}<input class="in" type="search" name="q" value="{{ request.GET.q }}" placeholder="Search" aria-label="Search">{% endif %}
+{% if filter_name %}<select class="in" name="{{ filter_name }}" aria-label="Filter" style="max-width:200px"><option value="">All</option>{% for o in filter_options %}<option {% if request.GET|get_item:filter_name == o %}selected{% endif %}>{{ o }}</option>{% endfor %}</select>{% endif %}
+{% if sort_options %}<select class="in" name="sort_by" aria-label="Sort by" style="max-width:220px"><option value="">Sort by</option>{% for value, label in sort_options %}<option value="{{ value }}" {% if sort_by == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>{% endif %}
+<button class="btn ghost sm">Apply</button></form>{% endif %}

@@ -81,3 +81,59 @@ class Access(TestCase):
         self.client.login(username="cashier", password="OnlyPawns#2026")
         self.assertEqual(self.client.get("/staff/reports/cashflow/").status_code, 302)
         self.assertEqual(self.client.get("/staff/reports/daily/").status_code, 200)
+
+
+class ListsSearchSortPaging(TestCase):
+    def setUp(self):
+        call_command("seed", verbosity=0)
+        self.client.login(username="admin", password="OnlyPawns#2026")
+
+    def test_search_finds_and_misses(self):
+        hit = self.client.get("/staff/customers/", {"q": "Santos"})
+        self.assertContains(hit, "Maria")
+        miss = self.client.get("/staff/customers/", {"q": "zzzz-nobody"})
+        self.assertContains(miss, "No records match")
+
+    def test_sort_whitelist_ignores_unknown_fields(self):
+        self.assertEqual(self.client.get("/staff/customers/", {"sort_by": "last_name"}).status_code, 200)
+        self.assertEqual(self.client.get("/staff/customers/", {"sort_by": "user__password"}).status_code, 200)
+        self.assertEqual(self.client.get("/staff/tickets/", {"sort_by": "-loan_amount"}).status_code, 200)
+
+    def test_sort_dropdown_keeps_selection(self):
+        r = self.client.get("/staff/customers/", {"sort_by": "status"})
+        self.assertContains(r, '<option value="status" selected>')
+
+    def test_every_list_page_opens(self):
+        for url in ("/staff/appraisals/", "/staff/tickets/", "/staff/ledger/", "/staff/support/", "/staff/admin/employees/",
+                    "/staff/admin/audit/", "/staff/admin/sms/", "/staff/admin/branches/", "/staff/admin/categories/",
+                    "/staff/admin/currencies/", "/staff/admin/rates/", "/staff/admin/idtypes/"):
+            self.assertEqual(self.client.get(url, {"q": "a", "sort_by": "pk"}).status_code, 200, url)
+
+    def test_dashboard_shows_real_counts(self):
+        r = self.client.get("/staff/")
+        self.assertEqual(r.context["customers_total"], Customer.objects.count())
+        self.assertIn("customers_this_year", r.context)
+
+
+class ClassBasedCrud(TestCase):
+    def setUp(self):
+        call_command("seed", verbosity=0)
+
+    def test_idtype_add_edit_delete(self):
+        from .models import IDType
+        self.client.login(username="admin", password="OnlyPawns#2026")
+        self.assertEqual(self.client.get("/staff/admin/idtypes/new/").status_code, 200)
+        r = self.client.post("/staff/admin/idtypes/new/", {"id_type_name": "Test ID"})
+        self.assertEqual(r.status_code, 302)
+        obj = IDType.objects.get(id_type_name="Test ID")
+        r = self.client.post(f"/staff/admin/idtypes/{obj.pk}/edit/", {"id_type_name": "Test ID 2"})
+        self.assertEqual(r.status_code, 302)
+        obj.refresh_from_db()
+        self.assertEqual(obj.id_type_name, "Test ID 2")
+        self.assertEqual(self.client.get(f"/staff/admin/idtypes/{obj.pk}/delete/").status_code, 405)
+        self.client.post(f"/staff/admin/idtypes/{obj.pk}/delete/")
+        self.assertFalse(IDType.objects.filter(pk=obj.pk).exists())
+
+    def test_cashier_cannot_open_admin_crud(self):
+        self.client.login(username="cashier", password="OnlyPawns#2026")
+        self.assertEqual(self.client.get("/staff/admin/branches/").status_code, 302)
