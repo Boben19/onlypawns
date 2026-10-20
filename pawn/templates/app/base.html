@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>{% block title %}Only Pawns{% endblock %}</title>
+<meta name="theme-color" content="#FF2E97"><link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="{% static 'pawn/icons/icon-192.png' %}"><link rel="apple-touch-icon" href="{% static 'pawn/icons/icon-192.png' %}">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'pawn/css/app.css' %}">
+{% block head %}{% endblock %}
+</head><body>
+<main class="phone">
+{% for m in messages %}<div class="flash {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
+{% block content %}{% endblock %}
+</main>
+{% if user.is_authenticated and user.is_client %}{% with p=request.path %}
+<nav class="tabbar" aria-label="Main">
+<a href="/app/home/" class="{% if p == '/app/home/' or '/tickets/' in p %}on{% endif %}"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10H3z"/></svg>Home</a>
+<a href="/app/history/" class="{% if '/history' in p %}on{% endif %}"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>History</a>
+<a href="/app/chat/" class="{% if '/chat' in p or '/help' in p %}on{% endif %}"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></svg>Bot Star</a>
+<a href="/app/branches/" class="{% if '/branches' in p %}on{% endif %}"><svg viewBox="0 0 24 24"><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Branches</a>
+<a href="/app/profile/" class="{% if '/profile' in p or '/wrap' in p %}on{% endif %}"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-5 15-5 16 0"/></svg>Me</a>
+</nav>{% endwith %}{% endif %}
+{% block scripts %}{% endblock %}
+<script src="{% static 'pawn/js/app.js' %}"></script>
+</body></html>

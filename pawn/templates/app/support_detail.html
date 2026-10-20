@@ -1,0 +1,6 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<p><a href="/app/help/">&larr; All requests</a></p><h1>{{ s.subject }}</h1><span class="badge {{ s.status|badge }}">{{ s.status }}</span>
+<div class="chat" style="margin-top:14px;padding-bottom:0">{% for m in s.messages.all %}<div class="bub {% if m.sender_user == user %}me{% else %}bot{% endif %}">{{ m.message }}<div class="small soft">{{ m.sent_at|date:"M d, g:i A" }}</div></div>{% endfor %}</div>
+<form method="post" class="card flat" style="margin-top:16px">{% csrf_token %}{% include "staff/_fields.html" %}<button class="btn block">Reply</button></form>
+{% endblock %}

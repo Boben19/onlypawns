@@ -1,0 +1,20 @@
+{
+  "name": "Only Pawns",
+  "short_name": "Only Pawns",
+  "description": "Your pawn tickets, reminders and branches in one place.",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0A0F",
+  "theme_color": "#FF2E97",
+  "icons": [
+    {"src": "/static/pawn/icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/pawn/icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "/static/pawn/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "My tickets", "url": "/app/home/"},
+    {"name": "Bot Star", "url": "/app/chat/"}
+  ]
+}

@@ -1,0 +1,5 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<h1>Scan or find</h1><form class="card flat" style="max-width:560px"><p class="soft">Paste the text from a customer's QR code, or type a transaction number, ticket number or padala reference. A USB or phone QR scanner types straight into this box.</p>
+<div class="field"><input class="in" name="q" value="{{ q }}" autofocus placeholder="PPS-20261019-0001" aria-label="Number or QR text"></div><button class="btn">Find</button></form>
+{% endblock %}

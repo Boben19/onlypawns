@@ -1,0 +1,11 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>Wrap Star {{ period }}</h1>
+<div class="wrapc"><div class="soft">Your star level</div><div class="big">{{ w.star_level }}</div>
+<p style="margin-top:14px">{% if w.items_pawned %}You pawned <b>{{ w.items_pawned }}</b> item{{ w.items_pawned|pluralize }} and got <b>{{ w.items_redeemed }}</b> back.{% else %}No pawns this year yet.{% endif %}</p></div>
+<div class="grid g2" style="grid-template-columns:1fr 1fr;margin-top:14px">
+<div class="card flat"><div class="kpi">{% amt w.total_pawned %}<small>total pawned</small></div></div><div class="card flat"><div class="kpi">{% amt w.total_redeemed %}<small>principal redeemed</small></div></div>
+<div class="card flat"><div class="kpi">{{ w.on_time_rate }}%<small>redeemed on time</small></div></div><div class="card flat"><div class="kpi" style="font-size:1.1rem">{{ w.top_category|default:"-" }}<small>most pawned category</small></div></div></div>
+<p class="soft small">Rookie to start, Regular after 2 redemptions, VIP Star at 5 or more with at least 80% on time.</p>
+<form class="row"><input class="in" name="period" value="{{ period }}" maxlength="4" inputmode="numeric" aria-label="Year" style="max-width:120px"><button class="btn ghost sm">Show year</button></form>
+{% endblock %}

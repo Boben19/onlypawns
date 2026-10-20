@@ -1,0 +1,19 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<div class="row between"><h1>{{ t.ticket_no }} <span class="badge {{ t.status|badge }}">{{ t.status }}</span></h1>
+<span class="row">{% if receipt %}<a class="btn ghost sm" target="_blank" href="/receipts/{{ t.transaction.transaction_no }}.pdf">Pawn ticket PDF</a>{% endif %}
+{% if t.is_open and user.role_name != 'Appraiser' %}<a class="btn sm" href="/staff/tickets/{{ t.pk }}/redeem/">Redeem</a><a class="btn sm" href="/staff/tickets/{{ t.pk }}/renew/">Renew</a>{% endif %}
+{% if t.status == 'Expired' and user.is_admin_role %}<a class="btn sm" href="/staff/auctions/new/{{ t.pk }}/">Schedule auction</a>{% endif %}</span></div>
+<div class="grid g2"><div class="card flat"><h2>Ticket</h2><dl class="facts">
+<dt>Customer</dt><dd><a href="/staff/customers/{{ t.customer.pk }}/">{{ t.customer.full_name }}</a></dd><dt>Item</dt><dd>{{ t.item.item_type }} ({{ t.item.status }})</dd>
+<dt>Loan</dt><dd>{{ t.loan_amount|peso }}</dd><dt>Interest</dt><dd>{{ t.interest_rate }} per month</dd><dt>Service fee</dt><dd>{{ t.service_fee|peso }}</dd>
+<dt>Loan date</dt><dd>{{ t.loan_date|date:"M d, Y" }}</dd><dt>Maturity</dt><dd>{{ t.maturity_date|date:"M d, Y" }}</dd><dt>Last day to redeem</dt><dd>{{ t.expiry_date|date:"M d, Y" }}</dd></dl>
+<p style="margin-top:12px">{{ t.item.description }}</p>
+<div class="row">{% for im in images %}<a href="{{ im.image.url }}" target="_blank"><img src="{{ im.image.url }}" alt="Item photo" style="width:90px;height:90px;object-fit:cover;border-radius:6px"></a>{% endfor %}</div></div>
+{% if due %}<div class="card flat"><h2>If paid today</h2><dl class="facts"><dt>Months counted</dt><dd>{{ due.months }}</dd><dt>Interest so far</dt><dd>{{ due.interest_total|peso }}</dd>
+<dt>Already paid in renewals</dt><dd>{{ due.interest_paid|peso }}</dd><dt>Interest owed</dt><dd>{{ due.interest_due|peso }}</dd></dl>
+<p class="sum">Redeem: {{ due.redeem_total|peso }}</p><p class="sum" style="border:0;margin:0">Renew: {{ due.renew_total|peso }}</p>
+{% if due.overdue %}<p class="badge bad" style="margin-top:10px">Past maturity, {{ due.days_to_expiry }} days before auction</p>{% endif %}</div>{% endif %}</div>
+{% if renewals %}<div class="card flat"><h2>Renewal history</h2><table class="tbl"><tr><th>#</th><th>Interest paid</th><th>Old maturity</th><th>New maturity</th></tr>
+{% for r in renewals %}<tr><td>{{ r.renewal_no }}</td><td>{{ r.interest_paid|peso }}</td><td>{{ r.old_maturity_date|date:"M d, Y" }}</td><td>{{ r.new_maturity_date|date:"M d, Y" }}</td></tr>{% endfor %}</table></div>{% endif %}
+{% endblock %}

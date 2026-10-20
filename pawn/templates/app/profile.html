@@ -1,0 +1,10 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>{{ c.full_name }}</h1><span class="badge {{ c.status|badge }}">{{ c.status }}</span>
+<div class="card flat" style="margin-top:14px"><dl class="facts"><dt>Customer ID</dt><dd>{{ c.code }}</dd><dt>Mobile</dt><dd>{{ c.mobile_no }}</dd><dt>Email</dt><dd>{{ c.email|default:"-" }}</dd><dt>Address</dt><dd>{{ c.address }}</dd></dl>
+<p class="soft small" style="margin-top:10px">To change any of these, visit a branch with your ID.</p></div>
+<form method="post" action="/app/currency/" class="card flat">{% csrf_token %}<div class="field"><label for="cur">Show amounts in</label><select class="in" id="cur" name="cur">{% for x in currencies %}<option value="{{ x.code }}" {% if x.code == cur %}selected{% endif %}>{{ x.code }} ({{ x.symbol }})</option>{% endfor %}</select>
+<div class="help">Display only. Your tickets are always kept in pesos at the rate set on the day.</div></div><button class="btn ghost sm">Apply</button></form>
+<div class="grid" style="grid-template-columns:1fr 1fr"><a class="card flat" href="/app/wrap/">Wrap Star</a><a class="card flat" href="/app/help/">Pawn Patrol</a></div>
+<a class="btn danger block" href="/app/logout/">Log out</a>
+{% endblock %}

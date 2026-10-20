@@ -1,0 +1,7 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>{{ s.subject }} <span class="badge {{ s.status|badge }}">{{ s.status }}</span></h1>
+<p class="soft">{{ s.customer.full_name }} ({{ s.customer.code }}), {{ s.category }}, opened {{ s.created_at|date:"M d, g:i A" }}</p>
+<div class="card flat">{% for m in s.messages.all %}<div style="margin-bottom:14px"><b>{{ m.sender_user.get_full_name|default:m.sender_user.username }}</b> <span class="soft small">{{ m.sent_at|date:"M d, g:i A" }}</span><br>{{ m.message|linebreaksbr }}</div>{% endfor %}</div>
+<form method="post" class="card flat" style="max-width:640px">{% csrf_token %}{% include "staff/_fields.html" %}<button class="btn">Send reply</button></form>
+{% endblock %}

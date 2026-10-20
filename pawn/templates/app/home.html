@@ -1,0 +1,17 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<div class="hello"><h1>Hi, {{ user.first_name }}</h1><span class="soft small">{{ request.user.customer.code }}</span></div>
+{% if user.customer.status == 'Pending Verification' %}<div class="flash info">A staff member still needs to check your ID. Visit any branch with it. Until then you can look around but not transact.</div>{% endif %}
+{% if user.customer.status == 'Deactivated' %}<div class="flash error">Your profile is deactivated. Please visit a branch.</div>{% endif %}
+{% for text, level in alerts %}<div class="flash {% if level == 'bad' %}error{% else %}info{% endif %}">{{ text }}</div>{% endfor %}
+<h2>Your tickets</h2>
+{% for t, d in cards %}<a class="card tk" href="/app/tickets/{{ t.pk }}/"><div class="row between"><b>{{ t.ticket_no }}</b><span class="badge {{ t.tracker_stage|badge }}">{{ t.tracker_stage }}</span></div>
+<div class="soft">{{ t.item.item_type }}</div><div class="amt" style="margin-top:6px">{% amt d.redeem_total %}</div>
+<div class="soft small">to redeem today &middot; matures {{ t.maturity_date|date:"M d, Y" }}</div></a>
+{% empty %}<div class="card flat"><p class="soft">No open tickets. Bring an item to any branch to get an appraisal.</p></div>{% endfor %}
+<div class="grid g2" style="grid-template-columns:1fr 1fr"><a class="card flat" href="/app/wrap/"><b>Wrap Star</b><div class="soft small">Your year with us</div></a>
+<a class="card flat" href="/app/help/"><b>Pawn Patrol</b><div class="soft small">Talk to our team</div></a></div>
+<h2>Latest activity</h2>
+{% for t in recent %}<div class="row between" style="margin-bottom:8px"><span>{{ t.transaction_type }} <span class="soft small">{{ t.created_at|date:"M d" }}</span></span><span class="mono">{% amt t.amount %}</span></div>{% empty %}<p class="soft">Nothing yet.</p>{% endfor %}
+<button class="btn ghost block install" type="button" style="margin-top:14px">Install Only Pawns on this phone</button>
+{% endblock %}

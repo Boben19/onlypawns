@@ -1,0 +1,14 @@
+{% extends "app/base.html" %}
+{% block content %}
+<h1>Create your login</h1>
+{% if cust %}<p class="soft">Registered as <b>{{ cust.code }}</b>, {{ cust.full_name }}. Link a Google account and pick a PIN.</p>
+{% else %}<p class="soft">Registered at the counter? Enter the customer ID from your receipt and your mobile number.</p>{% endif %}
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+<form method="post" class="card flat">{% csrf_token %}
+{% if not cust %}<div class="field"><label for="c">Customer ID</label><input class="in" id="c" name="code" placeholder="PPS-C-000124" required></div>
+<div class="field"><label for="m">Mobile number</label><input class="in" id="m" name="mobile" inputmode="tel" placeholder="09171234567" required></div>{% endif %}
+{% include "app/_google.html" %}
+<div class="field"><label for="pin">6-digit PIN</label><input class="in pin" id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" required></div>
+<div class="field"><label for="pin2">Type the PIN again</label><input class="in pin" id="pin2" name="pin2" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="new-password" required></div>
+<button class="btn block">Create login</button></form>
+{% endblock %}

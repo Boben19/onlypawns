@@ -1,0 +1,6 @@
+{% extends "app/base.html" %}
+{% block content %}
+<h1>Register</h1><p class="soft">Fill this in once. A staff member checks your ID before you can pawn or redeem. You must be 18 or older.</p>
+<form method="post" enctype="multipart/form-data" class="card flat">{% csrf_token %}{% include "staff/_fields.html" %}<button class="btn block">Continue</button></form>
+<p class="soft small">Already registered at a branch? <a href="/app/signup/">Finish your sign-up</a>.</p>
+{% endblock %}

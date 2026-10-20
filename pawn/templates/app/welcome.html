@@ -1,0 +1,10 @@
+{% extends "app/base.html" %}
+{% block content %}
+<div style="padding-top:12vh">
+<h1 style="font-size:2.3rem;line-height:1.15">Only <span style="color:var(--pink)">Pawns</span></h1>
+<p class="soft" style="font-size:1.05rem">Your pawn tickets, due dates and branches in your pocket. Register once, then open the app with a 6-digit PIN.</p>
+<a class="btn block" href="/app/register/" style="margin:22px 0 10px">Register</a>
+<a class="btn ghost block" href="/app/login/">I already have an account</a>
+<button class="btn ghost block install" type="button" style="margin-top:10px">Install the app</button>
+<p class="soft small" style="margin-top:28px">Staff? <a href="/staff/login/">Sign in here</a>.</p></div>
+{% endblock %}

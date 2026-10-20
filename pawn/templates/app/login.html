@@ -1,0 +1,14 @@
+{% extends "app/base.html" %}
+{% block content %}
+<div style="padding-top:8vh"><h1>{% if pin_step %}Hi{% if user_first %}, {{ user_first }}{% endif %}{% else %}Welcome back{% endif %}</h1>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+{% if pin_step %}<p class="soft">Enter your PIN.</p>
+<form method="post" class="card flat">{% csrf_token %}<input type="hidden" name="step" value="pin">
+<div class="field"><input class="in pin" name="pin" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" autocomplete="current-password" autofocus aria-label="PIN" required></div>
+<button class="btn block">Open</button></form>
+<p class="small"><a href="/app/login/?switch=1">Not you? Use another Google account</a> &middot; <a href="/app/recover/">Forgot PIN</a></p>
+{% else %}<p class="soft">Sign in with Google the first time on this phone. After that it's just your PIN.</p>
+<form method="post" class="card flat" {% if GOOGLE_CLIENT_ID %}data-autosubmit="1"{% endif %}>{% csrf_token %}<input type="hidden" name="step" value="google">
+{% include "app/_google.html" %}{% if not GOOGLE_CLIENT_ID %}<button class="btn block">Continue</button>{% endif %}</form>
+<p class="small">New here? <a href="/app/register/">Register</a></p>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% if GOOGLE_CLIENT_ID %}
+<input type="hidden" name="credential">
+<div id="g_id_onload" data-client_id="{{ GOOGLE_CLIENT_ID }}" data-callback="onGoogle" data-auto_prompt="false"></div>
+<div class="g_id_signin" data-type="standard" data-theme="filled_black" data-text="continue_with" data-shape="rectangular"></div>
+<p id="g-email" class="soft small"></p>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+{% else %}
+<div class="field"><label for="g-mail">Google email</label><input class="in" id="g-mail" type="email" name="email" autocomplete="email" required placeholder="you@gmail.com">
+<div class="help">Google Sign-In turns on once a client ID is added to the .env file. Until then the app takes the email directly (classroom demo mode).</div></div>
+{% endif %}

@@ -1,0 +1,11 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<div class="row between"><h1>{{ t.transaction_no }} <span class="badge {{ t.status|badge }}">{{ t.status }}</span></h1>
+{% if receipt %}<a class="btn" target="_blank" href="/receipts/{{ t.transaction_no }}.pdf">Open receipt (PDF)</a>{% endif %}</div>
+<div class="card flat" style="max-width:640px"><dl class="facts"><dt>Type</dt><dd>{{ t.transaction_type }}</dd><dt>Customer</dt><dd><a href="/staff/customers/{{ t.customer.pk }}/">{{ t.customer.full_name }}</a></dd>
+<dt>Branch</dt><dd>{{ t.branch }}</dd><dt>Handled by</dt><dd>{{ t.employee|default:"App" }}</dd><dt>Amount (PHP)</dt><dd>{{ t.amount|peso }}</dd>
+{% if t.currency.code != 'PHP' %}<dt>Original</dt><dd>{{ t.currency.code }} {{ t.original_amount }} at {{ t.exchange_rate_used }}</dd>{% endif %}
+<dt>Fee</dt><dd>{{ t.fee|peso }}</dd><dt>Date</dt><dd>{{ t.created_at|date:"M d, Y g:i A" }}</dd>
+{% if ticket %}<dt>Ticket</dt><dd><a href="/staff/tickets/{{ ticket.pk }}/">{{ ticket.ticket_no }}</a></dd>{% endif %}
+{% if t.remittance %}<dt>Reference no.</dt><dd>{{ t.remittance.reference_no }}</dd><dt>Receiver</dt><dd>{{ t.remittance.receiver_name }}, {{ t.remittance.receiver_mobile }}</dd><dt>Claim status</dt><dd>{{ t.remittance.claim_status }}</dd>{% endif %}</dl></div>
+{% endblock %}

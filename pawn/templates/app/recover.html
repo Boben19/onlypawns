@@ -1,0 +1,10 @@
+{% extends "app/base.html" %}
+{% block content %}
+<h1>Reset your PIN</h1><p class="soft">Use your Google account and the recovery key you saved when you signed up.</p>
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+<form method="post" class="card flat">{% csrf_token %}{% include "app/_google.html" %}
+<div class="field"><label for="k">Recovery key</label><input class="in" id="k" name="key" placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" autocapitalize="characters" required></div>
+<div class="field"><label for="pin">New 6-digit PIN</label><input class="in pin" id="pin" name="pin" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></div>
+<div class="field"><label for="pin2">Type it again</label><input class="in pin" id="pin2" name="pin2" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" required></div>
+<button class="btn block">Reset PIN</button></form>
+{% endblock %}

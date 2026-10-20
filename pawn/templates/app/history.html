@@ -1,0 +1,11 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>History</h1>
+<form class="row" style="margin-bottom:14px"><select class="in" name="type" aria-label="Type" style="flex:1"><option value="">All types</option>{% for x in types %}<option {% if x == kind %}selected{% endif %}>{{ x }}</option>{% endfor %}</select>
+<select class="in" name="status" aria-label="Status" style="flex:1"><option value="">Any status</option><option {% if status == 'Completed' %}selected{% endif %}>Completed</option><option {% if status == 'Pending' %}selected{% endif %}>Pending</option><option {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option></select>
+<button class="btn sm">Filter</button></form>
+<ul class="timeline">{% for t in txns %}<li><div class="row between"><b>{{ t.transaction_type }}</b><span class="mono">{% amt t.amount %}</span></div>
+<div class="soft small">{{ t.transaction_no }} &middot; {{ t.created_at|date:"M d, Y g:i A" }}</div>
+<span class="badge {{ t.status|badge }}">{{ t.status }}</span>{% if t.receipt %} <a class="small" href="/receipts/{{ t.transaction_no }}.pdf">Receipt</a>{% endif %}</li>
+{% empty %}<li class="soft">No transactions match.</li>{% endfor %}</ul>
+{% endblock %}

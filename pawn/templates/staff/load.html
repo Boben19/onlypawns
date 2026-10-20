@@ -1,0 +1,5 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>Prepaid load</h1><div class="grid g2"><form method="post" class="card flat">{% csrf_token %}<p class="soft small">Simulated for the demo. No real load is sent.</p>{% include "staff/_fields.html" %}<button class="btn">Send load</button></form>
+<div class="card flat"><h2>Recent</h2>{% for l in recent %}<p><a href="/staff/transactions/{{ l.transaction_id }}/">{{ l.transaction.transaction_no }}</a> {{ l.network }} {{ l.mobile_no }} {{ l.load_amount|peso }}</p>{% empty %}<p class="soft">None yet.</p>{% endfor %}</div></div>
+{% endblock %}

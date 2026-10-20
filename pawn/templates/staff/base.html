@@ -1,0 +1,52 @@
+{% load static pawn_extras %}<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}{{ title|default:"Dashboard" }}{% endblock %} - Only Pawns</title>
+<link rel="icon" href="{% static 'pawn/icons/icon-192.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'pawn/css/app.css' %}">
+</head><body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="shell">
+<nav class="side" aria-label="Main">
+  <div class="brand">Only <span>Pawns</span></div>
+  {% with p=request.path r=user.role_name %}
+  <a class="nav {% if p == '/staff/' %}on{% endif %}" href="/staff/">Dashboard</a>
+  <a class="nav {% if '/lookup' in p %}on{% endif %}" href="/staff/lookup/">Scan or find</a>
+  <div class="grp">Counter</div>
+  {% if r != 'Appraiser' or user.is_admin_role %}<a class="nav {% if '/customers' in p %}on{% endif %}" href="/staff/customers/">Customers</a>{% endif %}
+  <a class="nav {% if '/appraisals' in p %}on{% endif %}" href="/staff/appraisals/">Appraisals</a>
+  <a class="nav {% if '/tickets' in p %}on{% endif %}" href="/staff/tickets/">Pawn tickets</a>
+  {% if r == 'Cashier' or r == 'Administrator' %}
+  <a class="nav {% if '/padala' in p %}on{% endif %}" href="/staff/padala/">Padala</a>
+  <a class="nav {% if '/load' in p %}on{% endif %}" href="/staff/load/">Load</a>
+  <a class="nav {% if '/ledger' in p %}on{% endif %}" href="/staff/ledger/">Cash ledger</a>
+  <a class="nav {% if '/support' in p %}on{% endif %}" href="/staff/support/">Pawn Patrol</a>
+  <a class="nav {% if '/reports' in p %}on{% endif %}" href="/staff/reports/">Reports</a>
+  {% endif %}
+  {% if r == 'Administrator' %}
+  <a class="nav {% if '/auctions' in p %}on{% endif %}" href="/staff/auctions/">Auctions</a>
+  <div class="grp">Admin</div>
+  <a class="nav {% if '/admin/employees' in p %}on{% endif %}" href="/staff/admin/employees/">Employees</a>
+  <a class="nav {% if '/admin/branches' in p %}on{% endif %}" href="/staff/admin/branches/">Branches</a>
+  <a class="nav {% if '/admin/categories' in p %}on{% endif %}" href="/staff/admin/categories/">Rates and categories</a>
+  <a class="nav {% if '/admin/currencies' in p or '/admin/rates' in p %}on{% endif %}" href="/staff/admin/currencies/">Currencies</a>
+  <a class="nav" href="/staff/admin/rates/">Exchange rates</a>
+  <a class="nav {% if '/admin/idtypes' in p %}on{% endif %}" href="/staff/admin/idtypes/">Accepted IDs</a>
+  <a class="nav {% if '/admin/sms' in p %}on{% endif %}" href="/staff/admin/sms/">SMS log</a>
+  <a class="nav {% if '/admin/audit' in p %}on{% endif %}" href="/staff/admin/audit/">Audit log</a>
+  <a class="nav {% if '/admin/backups' in p %}on{% endif %}" href="/staff/admin/backups/">Backups</a>
+  {% endif %}
+  {% endwith %}
+  <div class="grp">{{ user.get_full_name|default:user.username }} ({{ user.role_name }})</div>
+  <a class="nav" href="/staff/logout/">Log out</a>
+</nav>
+<main class="main" id="main">
+  <div class="top"><button class="btn ghost sm menu-btn" type="button">Menu</button></div>
+  {% for m in messages %}<div class="flash {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</div>
+<script src="{% static 'pawn/js/app.js' %}"></script>
+</body></html>

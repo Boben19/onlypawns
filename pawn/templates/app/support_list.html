@@ -1,0 +1,6 @@
+{% extends "app/base.html" %}{% load pawn_extras %}
+{% block content %}
+<div class="row between"><h1>Pawn Patrol</h1><a class="btn sm" href="/app/help/new/">New request</a></div>
+{% for s in items %}<a class="card flat tk" href="/app/help/{{ s.pk }}/"><div class="row between"><b>{{ s.subject }}</b><span class="badge {{ s.status|badge }}">{{ s.status }}</span></div><div class="soft small">{{ s.category }} &middot; {{ s.created_at|date:"M d, Y" }}</div></a>
+{% empty %}<p class="soft">No requests yet. Something wrong with a transaction or your account? Send us a message.</p>{% endfor %}
+{% endblock %}

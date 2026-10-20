@@ -1,0 +1,6 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<h1>Reports</h1>{% if not user.is_admin_role %}<p class="soft">You can see your own shift. The other reports are for the administrator.</p>{% endif %}
+<div class="grid g2">{% for key, name, desc in reports %}<div class="card"><h2>{{ name }}</h2><p class="soft">{{ desc }}</p>
+<a class="btn" href="/staff/reports/{{ key }}/?start={{ today|date:'Y-m-d' }}&end={{ today|date:'Y-m-d' }}">Open</a></div>{% endfor %}</div>
+{% endblock %}

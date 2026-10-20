@@ -1,0 +1,4 @@
+{% extends "app/base.html" %}
+{% block content %}
+<h1>New request</h1><form method="post" class="card flat">{% csrf_token %}{% include "staff/_fields.html" %}<button class="btn block">Send</button></form>
+{% endblock %}

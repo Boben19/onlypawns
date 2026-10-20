@@ -1,0 +1,9 @@
+{% extends "app/base.html" %}
+{% block content %}
+<div class="row between"><h1>Bot Star</h1><span class="row"><a class="small" href="/app/chat/?new=1">New chat</a><a class="small" href="/app/help/">Help requests</a></span></div>
+<div class="chips"><button class="chip" type="button">What are your interest rates?</button><button class="chip" type="button">How do I redeem?</button><button class="chip" type="button">Show my tickets</button><button class="chip" type="button">Branch hours</button></div>
+<div class="chat" id="chat-box">
+{% if not history %}<div class="bub bot">Hi, I'm Bot Star. Ask me about rates, requirements, redeeming, renewing or your own tickets. Type "agent" if you want a person.</div>{% endif %}
+{% for m in history %}<div class="bub {% if m.sender == 'Customer' %}me{% else %}bot{% endif %}">{{ m.message }}</div>{% endfor %}</div>
+<form class="composer" id="chat-form" data-session="{{ session.pk }}">{% csrf_token %}<input class="in" id="chat-input" autocomplete="off" placeholder="Type a message" aria-label="Message"><button class="btn">Send</button></form>
+{% endblock %}

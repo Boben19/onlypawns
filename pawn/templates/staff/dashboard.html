@@ -1,0 +1,22 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>{% now "l, F j" %}</h1>
+{% if soon %}<h2>Tickets close to maturity</h2>
+{% for t, d in soon %}<div class="alertbar row between"><span><a href="/staff/tickets/{{ t.pk }}/"><b>{{ t.ticket_no }}</b></a> {{ t.customer.full_name }}, {{ t.item.item_type }}</span>
+<span>{% if d.overdue %}<span class="badge bad">{{ d.days_to_maturity|cut:"-" }} days overdue</span>{% elif d.days_to_maturity == 0 %}<span class="badge bad">due today</span>{% else %}<span class="badge warn">{{ d.days_to_maturity }} days left</span>{% endif %}
+<span class="soft small"> redeem {{ d.redeem_total|peso }}</span></span></div>{% endfor %}{% endif %}
+<div class="grid g3" style="margin:14px 0">
+  <div class="card flat"><div class="kpi">{{ open_count }}<small>open tickets</small></div></div>
+  <div class="card flat"><div class="kpi">{{ principal|peso }}<small>principal out on loan</small></div></div>
+  <div class="card flat"><div class="kpi">{{ cash_in|peso }}<small>cash in today</small></div></div>
+  <div class="card flat"><div class="kpi">{{ cash_out|peso }}<small>cash out today</small></div></div>
+  {% if user.role_name != 'Appraiser' %}<div class="card flat"><div class="kpi"><a href="/staff/customers/?status=Pending+Verification">{{ pending }}</a><small>customers waiting for ID check</small></div></div>{% endif %}
+  <div class="card flat"><div class="kpi"><a href="/staff/appraisals/">{{ pending_appraisals }}</a><small>appraisals not answered yet</small></div></div>
+  {% if user.role_name != 'Appraiser' %}<div class="card flat"><div class="kpi"><a href="/staff/support/">{{ support_open }}</a><small>open help requests</small></div></div>{% endif %}
+  <div class="card flat"><div class="kpi">{{ for_auction }}<small>expired, waiting for auction</small></div></div>
+</div>
+<div class="card flat"><h2>Latest transactions</h2><div class="tbl-wrap"><table class="tbl">
+<tr><th>No.</th><th>Type</th><th>Customer</th><th>Amount</th><th>Status</th></tr>
+{% for t in recent %}<tr><td><a href="/staff/transactions/{{ t.pk }}/">{{ t.transaction_no }}</a></td><td>{{ t.transaction_type }}</td><td>{{ t.customer.full_name }}</td><td class="mono">{{ t.amount|peso }}</td><td><span class="badge {{ t.status|badge }}">{{ t.status }}</span></td></tr>
+{% empty %}<tr><td colspan="5" class="soft">Nothing yet today.</td></tr>{% endfor %}</table></div></div>
+{% endblock %}

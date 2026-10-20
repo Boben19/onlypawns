@@ -1,0 +1,7 @@
+{% extends "staff/base.html" %}{% load pawn_extras %}
+{% block content %}
+<h1>Padala</h1><div class="grid g2"><form method="post" class="card flat">{% csrf_token %}<h2>Send money</h2>
+<p class="soft small">The fee is 1% with a minimum of ₱25. Foreign currency is converted at the rate saved by the admin and the rate is kept on the record.</p>{% include "staff/_fields.html" %}<button class="btn">Send padala</button></form>
+<div><form method="post" action="/staff/padala/claim/" class="card flat">{% csrf_token %}<h2>Claim a padala</h2>{% include "staff/_fields.html" with form=claim %}<button class="btn">Release money</button></form>
+<div class="card flat"><h2>Recent</h2>{% for r in recent %}<p><a href="/staff/transactions/{{ r.transaction_id }}/">{{ r.reference_no }}</a> to {{ r.receiver_name }} {{ r.transaction.amount|peso }} <span class="badge {{ r.claim_status|badge }}">{{ r.claim_status }}</span></p>{% empty %}<p class="soft">None yet.</p>{% endfor %}</div></div></div>
+{% endblock %}

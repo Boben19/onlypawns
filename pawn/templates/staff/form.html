@@ -1,0 +1,8 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<h1>{{ title }}</h1>
+<form method="post" class="card flat" style="max-width:640px" {% if multipart %}enctype="multipart/form-data"{% endif %}>{% csrf_token %}
+{% if note %}<p class="soft">{{ note }}</p>{% endif %}
+{% include "staff/_fields.html" %}
+<div class="row"><button class="btn">{{ submit }}</button><a class="btn ghost" href="{{ back }}">Cancel</a></div></form>
+{% endblock %}

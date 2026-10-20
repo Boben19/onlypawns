@@ -1,0 +1,8 @@
+{% extends "app/base.html" %}
+{% block content %}
+<h1>Save your recovery key</h1>
+<p>If you forget your PIN, this key plus your Google account is the only way back in. We keep a scrambled copy only, so we can't show it again.</p>
+<div class="keybox">{{ key }}</div>
+<p class="soft small">Screenshot it or write it down and keep it somewhere private. Don't share it with anyone, including our staff.</p>
+<a class="btn block" href="/app/home/">I saved it</a>
+{% endblock %}
