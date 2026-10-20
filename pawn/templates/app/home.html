@@ -5,12 +5,16 @@
 {% if user.customer.status == 'Deactivated' %}<div class="flash error">Your profile is deactivated. Please visit a branch.</div>{% endif %}
 {% for text, level in alerts %}<div class="flash {% if level == 'bad' %}error{% else %}info{% endif %}">{{ text }}</div>{% endfor %}
 <h2>Your tickets</h2>
-{% for t, d in cards %}<a class="card tk" href="/app/tickets/{{ t.pk }}/"><div class="row between"><b>{{ t.ticket_no }}</b><span class="badge {{ t.tracker_stage|badge }}">{{ t.tracker_stage }}</span></div>
+<div class="tk-grid">{% for t, d in cards %}<a class="card tk" href="/app/tickets/{{ t.pk }}/"><div class="row between"><b>{{ t.ticket_no }}</b><span class="badge {{ t.tracker_stage|badge }}">{{ t.tracker_stage }}</span></div>
 <div class="soft">{{ t.item.item_type }}</div><div class="amt" style="margin-top:6px">{% amt d.redeem_total %}</div>
-<div class="soft small">to redeem today &middot; matures {{ t.maturity_date|date:"M d, Y" }}</div></a>
-{% empty %}<div class="card flat"><p class="soft">No open tickets. Bring an item to any branch to get an appraisal.</p></div>{% endfor %}
-<div class="grid g2" style="grid-template-columns:1fr 1fr"><a class="card flat" href="/app/wrap/"><b>Wrap Star</b><div class="soft small">Your year with us</div></a>
-<a class="card flat" href="/app/help/"><b>Pawn Patrol</b><div class="soft small">Talk to our team</div></a></div>
+<div class="soft small">to redeem today &middot; matures {{ t.maturity_date|date:"M d, Y" }}</div>
+<div class="prog" data-start="{{ t.loan_date|date:"Y-m-d" }}" data-end="{{ t.maturity_date|date:"Y-m-d" }}" title="Time until maturity"><i></i></div>
+<div class="soft small" style="margin-top:4px">{% if d.overdue %}<span class="bad">Past maturity. Visit a branch soon.</span>{% elif d.days_to_maturity == 0 %}<span class="bad">Due today</span>{% else %}{{ d.days_to_maturity }} day{{ d.days_to_maturity|pluralize }} left to renew or redeem{% endif %}</div></a>
+{% empty %}<div class="card flat empty"><div class="ico">&#128142;</div><b>No open tickets yet</b><p class="soft">Bring an item to any branch to get an appraisal.</p><a class="btn ghost sm" href="/app/branches/">Find a branch</a></div>{% endfor %}</div>
+<div class="qa"><a href="/app/chat/"><b>Ask Bot Star</b><span class="soft small">Rates, steps, your tickets</span></a>
+<a href="/app/branches/"><b>Find a branch</b><span class="soft small">Map, hours, queue</span></a>
+<a href="/app/help/"><b>Pawn Patrol</b><span class="soft small">Talk to our team</span></a>
+<a href="/app/wrap/"><b>Wrap Star</b><span class="soft small">Your year with us</span></a></div>
 <h2>Latest activity</h2>
 {% for t in recent %}<div class="row between" style="margin-bottom:8px"><span>{{ t.transaction_type }} <span class="soft small">{{ t.created_at|date:"M d" }}</span></span><span class="mono">{% amt t.amount %}</span></div>{% empty %}<p class="soft">Nothing yet.</p>{% endfor %}
 <button class="btn ghost block install" type="button" style="margin-top:14px">Install Only Pawns on this phone</button>

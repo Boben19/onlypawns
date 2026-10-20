@@ -1,15 +1,19 @@
 {% extends "app/base.html" %}{% load pawn_extras %}
 {% block content %}
 <p><a href="/app/home/">&larr; Back</a></p>
-<h1>{{ t.ticket_no }}</h1>
+<div class="row between"><h1>{{ t.ticket_no }}</h1><button class="btn ghost sm" type="button" data-copy="{{ t.ticket_no }}">Copy number</button></div>
 <div class="card"><div class="tracker">{% for s in stages %}<div class="st {% if forloop.counter0 < idx %}done{% elif forloop.counter0 == idx %}now{% endif %}"><i></i>{{ s }}</div>{% endfor %}</div></div>
 <div class="card flat"><b>{{ t.item.item_type }}</b><p class="soft">{{ t.item.description }}</p>
 <div class="row">{% for im in images %}<img src="{{ im.image.url }}" alt="Item photo" style="width:80px;height:80px;object-fit:cover;border-radius:6px">{% endfor %}</div>
 <dl class="facts" style="margin-top:12px"><dt>Loan</dt><dd>{% amt t.loan_amount %}</dd><dt>Interest</dt><dd>{{ t.interest_rate }} a month</dd><dt>Loan date</dt><dd>{{ t.loan_date|date:"M d, Y" }}</dd>
 <dt>Maturity</dt><dd>{{ t.maturity_date|date:"M d, Y" }}</dd><dt>Last day to redeem</dt><dd>{{ t.expiry_date|date:"M d, Y" }}</dd></dl></div>
-{% if due %}<div class="card flat"><h2>If you pay today</h2><dl class="facts"><dt>Redeem the item</dt><dd>{% amt due.redeem_total %}</dd><dt>Renew only</dt><dd>{% amt due.renew_total %}</dd></dl>
-<p class="soft small">Renewing keeps the item and moves the maturity date one month ahead. Pay at any branch.</p></div>{% endif %}
-<div class="card"><h2>Show this at the counter</h2><img class="qr" src="/app/qr/{{ t.transaction.transaction_no }}.png" alt="QR code for {{ t.transaction.transaction_no }}"><p class="soft small" style="text-align:center">{{ t.transaction.transaction_no }}</p>
+{% if due %}<div class="card flat" id="whatif" data-ticket="{{ t.pk }}"><h2>What would I pay?</h2>
+<dl class="facts"><dt>Redeem the item</dt><dd class="big" id="wi-redeem">{% amt due.redeem_total %}</dd><dt>Renew only</dt><dd class="big" id="wi-renew">{% amt due.renew_total %}</dd></dl>
+<p class="soft small" id="wi-note" style="margin-top:8px">Amounts for today. Pick another date to see how it changes.</p>
+<div class="quick"><button type="button" class="chip" data-days="0">Today</button><button type="button" class="chip" data-days="7">In 7 days</button><button type="button" class="chip" data-days="30">In 30 days</button><button type="button" class="chip" data-maturity="{{ t.maturity_date|date:"Y-m-d" }}">On maturity</button></div>
+<div class="field" style="margin:0"><label for="wi-date">Or choose a date</label><input class="in" id="wi-date" type="date" value="{% now "Y-m-d" %}"></div>
+<p class="soft small" style="margin-top:10px">Renewing keeps the item and moves the maturity date one month ahead. Pay at any branch.</p></div>{% endif %}
+<div class="card"><h2>Show this at the counter</h2><img class="qr" src="/app/qr/{{ t.transaction.transaction_no }}.png" alt="QR code for {{ t.transaction.transaction_no }}"><p class="soft small" style="text-align:center">{{ t.transaction.transaction_no }} &middot; tap the code to enlarge</p>
 <a class="btn ghost block" href="/receipts/{{ t.transaction.transaction_no }}.pdf">Open pawn ticket (PDF)</a></div>
-{% if renewals %}<div class="card flat"><h2>Renewals</h2>{% for r in renewals %}<p>#{{ r.renewal_no }}: paid {% amt r.interest_paid %}, now due {{ r.new_maturity_date|date:"M d, Y" }}</p>{% endfor %}</div>{% endif %}
+{% if renewals %}<details class="card flat"><summary>Renewals ({{ renewals|length }})</summary>{% for r in renewals %}<p>#{{ r.renewal_no }}: paid {% amt r.interest_paid %}, now due {{ r.new_maturity_date|date:"M d, Y" }}</p>{% endfor %}</details>{% endif %}
 {% endblock %}

@@ -1,4 +1,4 @@
-{% extends "staff/base.html" %}{% load pawn_extras %}
+{% extends "staff/base.html" %}{% load pawn_extras l10n %}
 {% block content %}
 <h1>{% if mode == 'redeem' %}Redeem{% else %}Renew{% endif %} {{ t.ticket_no }}</h1>
 {% if not due %}<div class="flash error">This ticket is {{ t.status|lower }} and can't be processed.</div><a class="btn ghost" href="/staff/tickets/{{ t.pk }}/">Back</a>
@@ -7,5 +7,6 @@
 <dt>Service fee</dt><dd>{{ due.service_fee|peso }}</dd><dt>Penalty</dt><dd>{{ due.penalty|peso }}</dd>{% else %}
 <dt>Interest to pay</dt><dd>{{ due.renew_total|peso }}</dd><dt>Principal (stays the same)</dt><dd>{{ due.principal|peso }}</dd>
 <dt>Current maturity</dt><dd>{{ t.maturity_date|date:"M d, Y" }}</dd>{% endif %}</dl><p class="sum">Total {{ total|peso }}</p></div>
-<form method="post" class="card flat">{% csrf_token %}{% include "staff/_fields.html" %}<div class="row"><button class="btn">Confirm and print receipt</button><a class="btn ghost" href="/staff/tickets/{{ t.pk }}/">Cancel</a></div></form></div>{% endif %}
+<form method="post" class="card flat">{% csrf_token %}{% include "staff/_fields.html" %}
+<div class="changebox" id="change" data-total="{{ total|unlocalize }}"><div class="quick"><button type="button" class="chip" id="exact">Exact amount</button><button type="button" class="chip" data-bill="500">500</button><button type="button" class="chip" data-bill="1000">1,000</button><button type="button" class="chip" data-bill="2000">2,000</button></div><div id="change-out" class="soft"></div></div><div class="row"><button class="btn">Confirm and print receipt</button><a class="btn ghost" href="/staff/tickets/{{ t.pk }}/">Cancel</a></div></form></div>{% endif %}
 {% endblock %}

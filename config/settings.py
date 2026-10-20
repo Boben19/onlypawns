@@ -23,7 +23,7 @@ env = os.environ.get
 
 SECRET_KEY = env("SECRET_KEY", "only-pawns-dev-key-please-change-this-in-production-1234567890")
 DEBUG = env("DEBUG", "1") == "1"
-ALLOWED_HOSTS = env("ALLOWED_HOSTS", "*").split(",")
+ALLOWED_HOSTS = [h.strip() for h in env("ALLOWED_HOSTS", "*").split(",") if h.strip()]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -94,6 +94,8 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_SSL_REDIRECT = True
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],

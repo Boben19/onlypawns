@@ -7,9 +7,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'pawn/css/app.css' %}">
+<script src="{% static 'pawn/js/theme-init.js' %}"></script>
+<link rel="stylesheet" href="{% static 'pawn/css/app.css' %}"><link rel="stylesheet" href="{% static 'pawn/css/glass.css' %}">
 {% block head %}{% endblock %}
 </head><body>
+{% include "_backdrop.html" %}
 <main class="phone">
 {% for m in messages %}<div class="flash {{ m.tags }}" role="status">{{ m }}</div>{% endfor %}
 {% block content %}{% endblock %}

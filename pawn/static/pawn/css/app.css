@@ -105,3 +105,77 @@ dl.facts{display:grid;grid-template-columns:max-content 1fr;gap:6px 18px;margin:
 .install{display:none}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 @media print{.side,.top .btn,.tabbar,.no-print{display:none!important}body{background:#fff;color:#000}.card{border-color:#ccc}}
+
+/* ===== usability layer ===== */
+:root{--soft:#B4B4C8}
+.in,select.in,textarea.in{font-size:16px;min-height:44px}
+.btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .08s,filter .15s}
+.btn.sm{min-height:36px} .btn:active{transform:scale(.97)}
+.btn.block{display:flex}
+.btn.loading{pointer-events:none;opacity:.75;position:relative;color:transparent!important}
+.btn.loading:after{content:"";position:absolute;width:18px;height:18px;border:2px solid currentColor;border-color:#12000a #12000a transparent transparent;border-radius:50%;animation:spin .7s linear infinite}
+.btn.ghost.loading:after,.btn.danger.loading:after{border-color:var(--white) var(--white) transparent transparent}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.phone>*,.main>*{animation:rise .3s ease both}
+.card.tk{transition:transform .15s,background .15s} .card.tk:hover{transform:translateY(-2px)}
+a.card.flat{color:inherit} a.card.flat:hover{text-decoration:none;border-color:var(--pink)}
+.in.touched:invalid{border-color:var(--bad)} .in.good{border-color:var(--ok)}
+.okc{color:var(--ok)} .bad{color:var(--bad)}
+
+/* flash + toasts */
+.flash{position:relative;padding-right:38px;transition:opacity .25s,transform .25s}
+.flash.out{opacity:0;transform:translateX(12px)}
+.flash .x{position:absolute;right:6px;top:4px;background:none;border:0;color:var(--soft);font-size:1.3rem;cursor:pointer;line-height:1;padding:4px 8px}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:84px;z-index:60;display:grid;gap:8px;width:min(420px,92vw);pointer-events:none}
+.toast{background:var(--raised);border:1px solid var(--line);border-left:3px solid var(--pink);padding:10px 14px;border-radius:6px;animation:rise .25s both;transition:opacity .3s}
+.toast.success{border-left-color:var(--ok)} .toast.error{border-left-color:var(--bad)} .toast.out{opacity:0}
+#offline-bar{position:fixed;top:0;left:0;right:0;background:var(--warn);color:#241a00;text-align:center;padding:6px 10px;font-weight:600;font-size:.85rem;z-index:80}
+
+/* confirm dialog + QR zoom */
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;z-index:90;padding:18px;animation:rise .15s both}
+.modal{background:var(--panel);border:1px solid var(--pink-dim);border-radius:8px;padding:20px;width:min(380px,100%)}
+.modal p{font-size:1rem;margin-top:0}
+.qr-zoom{align-content:center;gap:10px;text-align:center} .qr-zoom img{width:min(86vw,360px);background:#fff;padding:14px;border-radius:8px}
+img.qr{cursor:zoom-in}
+
+/* PIN */
+.field .eye{position:absolute;right:8px;top:30px;background:none;border:0;color:var(--soft);font:600 .8rem var(--body);cursor:pointer;padding:6px}
+.in.pin{padding-right:56px;font-size:1.6rem}
+
+/* ticket cards */
+.prog{height:6px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:10px}
+.prog i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.prog.warn i{background:var(--warn)} .prog.bad i{background:var(--bad)}
+.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:6px 0 16px}
+.qa a{display:flex;flex-direction:column;gap:2px;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--white);transition:border-color .15s,transform .1s}
+.qa a:hover{border-color:var(--pink);text-decoration:none;transform:translateY(-1px)} .qa a b{font-family:var(--head);font-size:.92rem}
+.empty{text-align:center;padding:26px 14px} .empty .ico{font-size:2rem;margin-bottom:6px}
+details.card summary{cursor:pointer;font:600 1.05rem var(--head);list-style:none;display:flex;justify-content:space-between}
+details.card summary:after{content:"+";color:var(--pink)} details.card[open] summary:after{content:"\2212"}
+details.card[open] summary{margin-bottom:12px}
+
+/* what-if calculator */
+#whatif.busy dl{opacity:.45;transition:opacity .15s}
+#whatif .quick,.quick{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 12px}
+#whatif .big{font:600 1.15rem var(--head)}
+
+/* chat */
+.bub{position:relative;animation:rise .2s both} .bub .ts{display:block;font-size:.68rem;color:var(--soft);margin-top:3px;text-align:right}
+.bub.typing{display:flex;gap:5px;padding:13px 16px} .bub.typing i{width:7px;height:7px;border-radius:50%;background:var(--soft);animation:blink 1s infinite}
+.bub.typing i:nth-child(2){animation-delay:.15s} .bub.typing i:nth-child(3){animation-delay:.3s}
+@keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.composer.wait .btn{opacity:.5;pointer-events:none}
+
+/* tables */
+.tbl-filter{display:flex;gap:12px;align-items:center;margin:0 0 10px} .tbl-filter .in{max-width:280px}
+.tbl th.sortable{cursor:pointer;user-select:none} .tbl th.sortable:hover{color:var(--white)}
+.tbl th[data-dir=asc]:after{content:" \25B2";font-size:.65rem;color:var(--pink)} .tbl th[data-dir=desc]:after{content:" \25BC";font-size:.65rem;color:var(--pink)}
+
+/* staff */
+.topbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;position:sticky;top:0;z-index:5;background:var(--ink);padding:10px 0}
+.topbar form{flex:1;max-width:460px;display:flex;gap:8px} .topbar .in{flex:1}
+.shortcuts{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 18px}
+.card.flat a.kpilink{color:inherit} .card.flat:has(.kpi a):hover{border-color:var(--pink)}
+.changebox{margin:12px 0;padding:12px;border:1px dashed var(--line);border-radius:6px;font-weight:600}
+@media(max-width:860px){.tbl th,.tbl td{padding:8px 6px;font-size:.88rem}.topbar form{max-width:none}}

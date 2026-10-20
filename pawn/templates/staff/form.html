@@ -1,8 +1,11 @@
-{% extends "staff/base.html" %}
+{% extends "staff/base.html" %}{% load static %}
 {% block content %}
 <h1>{{ title }}</h1>
 <form method="post" class="card flat" style="max-width:640px" {% if multipart %}enctype="multipart/form-data"{% endif %}>{% csrf_token %}
 {% if note %}<p class="soft">{{ note }}</p>{% endif %}
 {% include "staff/_fields.html" %}
+{% if form.latitude and form.longitude %}<div class="field"><label for="pick-search">Pick the branch on the map</label><div class="mapbar" style="margin-bottom:8px"><div style="display:flex;gap:8px;flex:1;position:relative"><input class="in" id="pick-search" type="search" placeholder="Search a place, then drag the pin" autocomplete="off"><ul class="suggest card" id="pick-suggest" hidden></ul></div></div><div id="pick-map" class="pick-map" style="height:280px"></div><div class="help">Click the map or drag the pin. Latitude and longitude above update by themselves.</div></div>{% endif %}
 <div class="row"><button class="btn">{{ submit }}</button><a class="btn ghost" href="{{ back }}">Cancel</a></div></form>
 {% endblock %}
+{% block head %}{% if form.latitude and form.longitude %}<link rel="stylesheet" href="{% static 'pawn/vendor/leaflet/leaflet.css' %}">{% endif %}{% endblock %}
+{% block scripts %}{% if form.latitude and form.longitude %}<script src="{% static 'pawn/vendor/leaflet/leaflet.js' %}"></script>{% endif %}{% endblock %}

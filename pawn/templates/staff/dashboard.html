@@ -1,6 +1,7 @@
 {% extends "staff/base.html" %}{% load pawn_extras %}
 {% block content %}
 <h1>{% now "l, F j" %}</h1>
+<div class="shortcuts">{% if user.role_name != 'Appraiser' %}<a class="btn sm" href="/staff/customers/new/">New walk-in customer</a>{% endif %}<a class="btn ghost sm" href="/staff/appraisals/new/">New appraisal</a><a class="btn ghost sm" href="/staff/lookup/">Scan or find</a><a class="btn ghost sm" href="/staff/tickets/">All tickets</a></div>
 {% if soon %}<h2>Tickets close to maturity</h2>
 {% for t, d in soon %}<div class="alertbar row between"><span><a href="/staff/tickets/{{ t.pk }}/"><b>{{ t.ticket_no }}</b></a> {{ t.customer.full_name }}, {{ t.item.item_type }}</span>
 <span>{% if d.overdue %}<span class="badge bad">{{ d.days_to_maturity|cut:"-" }} days overdue</span>{% elif d.days_to_maturity == 0 %}<span class="badge bad">due today</span>{% else %}<span class="badge warn">{{ d.days_to_maturity }} days left</span>{% endif %}

@@ -1,11 +1,26 @@
-{% extends "app/base.html" %}
-{% block head %}<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">{% endblock %}
+{% extends "app/base.html" %}{% load static %}
+{% block head %}<link rel="stylesheet" href="{% static 'pawn/vendor/leaflet/leaflet.css' %}">{% endblock %}
 {% block content %}
-<h1>Branches</h1><div id="map" aria-label="Map of branches"></div>
-{% for b in branches %}<div class="card flat"><div class="row between"><b>{{ b.branch_name }}</b><button class="btn ghost sm" type="button" data-fly data-lat="{{ b.latitude }}" data-lng="{{ b.longitude }}">Show on map</button></div>
-<div class="soft">{{ b.address }}</div><div class="small">Open {{ b.open_time|time:"g:i A" }} to {{ b.close_time|time:"g:i A" }} &middot; <a href="tel:{{ b.contact_no }}">{{ b.contact_no }}</a></div>
+<h1>Branches</h1>
+<div class="mapbar">
+  <form id="place-form" role="search" autocomplete="off"><input class="in" id="place" type="search" placeholder="Search a place or barangay" aria-label="Search a place" aria-controls="suggest"><ul class="suggest card" id="suggest" role="listbox" hidden></ul><button class="btn ghost">Go</button></form>
+  <button class="btn" type="button" id="locate">Use my location</button>
+</div>
+<div class="branch-grid">
+  <div class="map-col"><div id="map" aria-label="Map of branches"></div><p id="nearest" class="soft small" aria-live="polite" style="margin-top:8px"></p></div>
+  <div class="list-col" id="blist">
+{% for b in branches %}<div class="card flat bcard" data-lat="{{ b.latitude|stringformat:'s' }}" data-lng="{{ b.longitude|stringformat:'s' }}" data-open="{{ b.open_time|time:'H:i' }}" data-close="{{ b.close_time|time:'H:i' }}" data-name="{{ b.branch_name }}">
+<div class="row between"><b>{{ b.branch_name }}</b><span class="badge mute open-flag">&nbsp;</span></div>
+<div class="soft">{{ b.address }}</div>
+<div class="small">Open {{ b.open_time|time:"g:i A" }} to {{ b.close_time|time:"g:i A" }} &middot; <a href="tel:{{ b.contact_no }}">{{ b.contact_no }}</a></div>
 <div class="row small" style="margin-top:8px"><span class="badge mute">{{ b.open_counters }} counter{{ b.open_counters|pluralize }} open</span>
-<span class="badge {% if b.queue_count > 5 %}bad{% elif b.queue_count > 2 %}warn{% else %}ok{% endif %}">{{ b.queue_count }} waiting</span></div></div>{% endfor %}
+<span class="badge {% if b.queue_count > 5 %}bad{% elif b.queue_count > 2 %}warn{% else %}ok{% endif %}">{{ b.queue_count }} waiting</span>
+<span class="dist soft"></span><span class="wx soft"></span></div>
+<div class="row" style="margin-top:10px"><button class="btn ghost sm" type="button" data-fly data-lat="{{ b.latitude|stringformat:'s' }}" data-lng="{{ b.longitude|stringformat:'s' }}">Show on map</button>
+<a class="btn ghost sm" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination={{ b.latitude|stringformat:'s' }},{{ b.longitude|stringformat:'s' }}">Directions</a></div></div>
+{% empty %}<div class="card flat empty"><div class="ico">&#128205;</div><b>No branches yet</b></div>{% endfor %}
+  </div>
+</div>
 {{ branch_json|json_script:"branch-data" }}
 {% endblock %}
-{% block scripts %}<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>{% endblock %}
+{% block scripts %}<script src="{% static 'pawn/vendor/leaflet/leaflet.js' %}"></script>{% endblock %}

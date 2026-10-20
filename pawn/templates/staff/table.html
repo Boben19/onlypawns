@@ -12,7 +12,7 @@
 <div class="card flat"><div class="tbl-wrap"><table class="tbl"><thead><tr>{% for h in headers %}<th>{{ h }}</th>{% endfor %}<th></th></tr></thead><tbody>
 {% for row in rows %}<tr>{% for c in row.cells %}<td class="{% if forloop.counter0 > 2 %}mono{% endif %}">
 {% if forloop.counter0 == row.badge %}<span class="badge {{ c|badge }}">{{ c }}</span>{% elif forloop.first and row.url %}<a href="{{ row.url }}">{{ c }}</a>{% else %}{{ c }}{% endif %}</td>{% endfor %}
-<td class="right">{% if row.delete %}<form method="post" action="{{ row.delete }}" onsubmit="return confirm('Delete this record?')" style="display:inline">{% csrf_token %}<button class="btn danger sm">Delete</button></form>{% endif %}</td></tr>
+<td class="right">{% if row.delete %}<form method="post" action="{{ row.delete }}" style="display:inline">{% csrf_token %}<button class="btn danger sm" data-confirm="Delete this record? This can't be undone." data-ok="Delete">Delete</button></form>{% endif %}</td></tr>
 {% empty %}<tr><td colspan="{{ headers|length|add:1 }}" class="soft">Nothing here yet.</td></tr>{% endfor %}</tbody></table></div>
 {% for s in summary %}<p class="sum" style="margin-bottom:0">{{ s }}</p>{% endfor %}</div>
 {% if page and page.paginator.num_pages > 1 %}<div class="pager"><span class="soft small">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>

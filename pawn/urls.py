@@ -4,7 +4,7 @@ from django.urls import include, path
 from django.conf import settings
 from rest_framework.routers import DefaultRouter
 
-from . import api, views_client as C, views_staff as V
+from . import api, geo, views_client as C, views_staff as V
 
 router = DefaultRouter()
 router.register("customers", api.CustomerViewSet, basename="api-customers")
@@ -102,6 +102,8 @@ urlpatterns = [
     path("", lambda r: redirect("client_welcome")),
     path("staff/", include(staff)),
     path("app/", include(client)),
+    path("geo/search/", geo.search, name="geo_search"),
+    path("geo/weather/", geo.weather, name="geo_weather"),
     path("api/bot/", api.bot, name="api_bot"),
     path("api/", include(router.urls)),
     path("receipts/<str:txn_no>.pdf", V.receipt_file, name="receipt_file"),

@@ -18,8 +18,8 @@
 {% if i.selfie_image %}<a class="btn ghost sm" target="_blank" href="/staff/ids/{{ i.pk }}/selfie/">Selfie</a>{% endif %}</div></div>
 {% empty %}<p class="soft">No ID uploaded.</p>{% endfor %}
 {% if user.role_name != 'Appraiser' %}<form method="post" action="/staff/customers/{{ c.pk }}/status/" class="row">{% csrf_token %}
-{% if c.status == 'Pending Verification' %}<button name="action" value="verify" class="btn sm">Verify and activate</button><button name="action" value="reject" class="btn danger sm">Reject ID</button>
-{% elif c.status == 'Active' %}<button name="action" value="deactivate" class="btn danger sm" onclick="return confirm('Deactivate this customer?')">Deactivate</button>
+{% if c.status == 'Pending Verification' %}<button name="action" value="verify" class="btn sm">Verify and activate</button><button name="action" value="reject" class="btn danger sm" data-confirm="Reject this ID? The customer will have to resubmit." data-ok="Reject">Reject ID</button>
+{% elif c.status == 'Active' %}<button name="action" value="deactivate" class="btn danger sm" data-confirm="Deactivate this customer? They won't be able to transact until reactivated." data-ok="Deactivate">Deactivate</button>
 {% else %}<button name="action" value="reactivate" class="btn sm">Reactivate</button>{% endif %}</form>{% endif %}</div></div>
 <div class="grid g2"><div class="card flat"><h2>Tickets</h2>{% for t in tickets %}<p><a href="/staff/tickets/{{ t.pk }}/">{{ t.ticket_no }}</a> {{ t.item.item_type }} <span class="badge {{ t.status|badge }}">{{ t.status }}</span></p>{% empty %}<p class="soft">None.</p>{% endfor %}</div>
 <div class="card flat"><h2>Recent transactions</h2>{% for t in txns %}<p><a href="/staff/transactions/{{ t.pk }}/">{{ t.transaction_no }}</a> {{ t.transaction_type }} {{ t.amount|peso }}</p>{% empty %}<p class="soft">None.</p>{% endfor %}</div></div>
