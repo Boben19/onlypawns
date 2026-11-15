@@ -330,15 +330,32 @@
       var dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
       root.setAttribute("data-theme", dark ? "dark" : "light"); root.setAttribute("data-theme-pref", pref);
       $$("[data-theme-choice]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.themeChoice === pref)); });
-      var m = document.querySelector("meta[name=theme-color]"); if (m) m.setAttribute("content", dark ? "#0c0a14" : "#f6eff5");
+      var m = document.querySelector("meta[name=theme-color]"); if (m) m.setAttribute("content", dark ? "#0A1128" : "#0057E7");
     }
-    apply(root.getAttribute("data-theme-pref") || "system");
+    apply(root.getAttribute("data-theme-pref") || "light");
     $$("[data-theme-choice]").forEach(function (b) {
       b.addEventListener("click", function () { try { localStorage.setItem("op-theme", b.dataset.themeChoice); } catch (e) {} apply(b.dataset.themeChoice); });
     });
     if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
       if (root.getAttribute("data-theme-pref") === "system") apply("system");
     });
+  })();
+
+  /* ---------- text size: normal -> large -> extra large (the "Aa" button) ---------- */
+  (function () {
+    var root = document.documentElement, order = ["md", "lg", "xl"], names = { md: "Normal text", lg: "Large text", xl: "Extra large text" };
+    function cur() { var v = root.getAttribute("data-fs"); return v === "lg" || v === "xl" ? v : "md"; }
+    function paint() { $$("[data-fs-cycle]").forEach(function (b) { b.setAttribute("aria-label", "Text size: " + names[cur()] + ". Tap to change."); b.title = names[cur()]; }); }
+    $$("[data-fs-cycle]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var next = order[(order.indexOf(cur()) + 1) % order.length];
+        if (next === "md") root.removeAttribute("data-fs"); else root.setAttribute("data-fs", next);
+        try { localStorage.setItem("op-fs", next); } catch (e) {}
+        paint();
+        if (window.toast) window.toast(names[next], "success");
+      });
+    });
+    paint();
   })();
 
   /* ---------- small screens: tables turn into stacked cards ---------- */

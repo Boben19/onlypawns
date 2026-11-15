@@ -1,21 +1,49 @@
 {% extends "app/base.html" %}{% load pawn_extras %}
 {% block content %}
-<div class="hello"><h1>Hi, {{ user.first_name }}</h1><span class="soft small">{{ request.user.customer.code }}</span></div>
+<section class="hero">
+<h1>Hi, {{ user.first_name }}!</h1>
+<span class="id">Customer ID: {{ request.user.customer.code }}</span>
+{% if cards %}
+<div class="lbl">To get all your items back today</div>
+<div class="big">{% amt total_redeem %}</div>
+<div class="meta"><span>{{ cards|length }} active ticket{{ cards|length|pluralize }}</span>{% if next_due %}<span>Next due date: {{ next_due|date:"M d, Y" }}</span>{% endif %}</div>
+<div class="acts"><a class="btn light" href="#tickets">See my tickets</a><a class="btn gold" href="/app/branches/">Find a branch</a></div>
+{% else %}
+<p style="margin-top:14px">You have no open pawn tickets right now. Bring an item to any branch and we will appraise it for you.</p>
+<div class="acts"><a class="btn gold" href="/app/branches/">Find a branch</a><a class="btn light" href="/app/chat/">Ask a question</a></div>
+{% endif %}
+</section>
 {% if user.customer.status == 'Pending Verification' %}<div class="flash info">A staff member still needs to check your ID. Visit any branch with it. Until then you can look around but not transact.</div>{% endif %}
 {% if user.customer.status == 'Deactivated' %}<div class="flash error">Your profile is deactivated. Please visit a branch.</div>{% endif %}
 {% for text, level in alerts %}<div class="flash {% if level == 'bad' %}error{% else %}info{% endif %}">{{ text }}</div>{% endfor %}
-<h2>Your tickets</h2>
+
+<h2 style="margin-top:.4em">What would you like to do?</h2>
+<div class="svc">
+<a class="svc-tile" href="#tickets"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4z"/><path d="M14 7v10" stroke-dasharray="2 2.5"/></svg></span><b>My tickets</b><span class="sub">See what you owe</span></a>
+<a class="svc-tile" href="/app/history/"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><b>History</b><span class="sub">Payments and receipts</span></a>
+<a class="svc-tile" href="/app/branches/"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s7-6 7-12a7 7 0 10-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg></span><b>Find a branch</b><span class="sub">Map, hours and queue</span></a>
+<a class="svc-tile" href="/app/chat/"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span><b>Ask Bot Star</b><span class="sub">Rates, steps, your tickets</span></a>
+<a class="svc-tile" href="/app/help/"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0116 0v2"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></svg></span><b>Get help</b><span class="sub">Pawn Patrol, talk to our team</span></a>
+<a class="svc-tile" href="/app/wrap/"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg></span><b>Your year</b><span class="sub">Wrap Star</span></a>
+</div>
+
+<h2 id="tickets">Your tickets</h2>
 <div class="tk-grid">{% for t, d in cards %}<a class="card tk" href="/app/tickets/{{ t.pk }}/"><div class="row between"><b>{{ t.ticket_no }}</b><span class="badge {{ t.tracker_stage|badge }}">{{ t.tracker_stage }}</span></div>
 <div class="soft">{{ t.item.item_type }}</div><div class="amt" style="margin-top:6px">{% amt d.redeem_total %}</div>
-<div class="soft small">to redeem today &middot; matures {{ t.maturity_date|date:"M d, Y" }}</div>
-<div class="prog" data-start="{{ t.loan_date|date:"Y-m-d" }}" data-end="{{ t.maturity_date|date:"Y-m-d" }}" title="Time until maturity"><i></i></div>
-<div class="soft small" style="margin-top:4px">{% if d.overdue %}<span class="bad">Past maturity. Visit a branch soon.</span>{% elif d.days_to_maturity == 0 %}<span class="bad">Due today</span>{% else %}{{ d.days_to_maturity }} day{{ d.days_to_maturity|pluralize }} left to renew or redeem{% endif %}</div></a>
+<div class="soft small">to get it back today &middot; due {{ t.maturity_date|date:"M d, Y" }}</div>
+<div class="prog" data-start="{{ t.loan_date|date:"Y-m-d" }}" data-end="{{ t.maturity_date|date:"Y-m-d" }}" title="Time until due date"><i></i></div>
+<div class="small" style="margin-top:6px">{% if d.overdue %}<span class="bad"><b>Past due date. Please visit a branch soon.</b></span>{% elif d.days_to_maturity == 0 %}<span class="bad"><b>Due today</b></span>{% else %}<span class="soft">{{ d.days_to_maturity }} day{{ d.days_to_maturity|pluralize }} left to renew or get it back</span>{% endif %}</div>
+<div class="small" style="margin-top:8px;color:var(--pink);font-weight:700">Tap for details &rsaquo;</div></a>
 {% empty %}<div class="card flat empty"><div class="ico">&#128142;</div><b>No open tickets yet</b><p class="soft">Bring an item to any branch to get an appraisal.</p><a class="btn ghost sm" href="/app/branches/">Find a branch</a></div>{% endfor %}</div>
-<div class="qa"><a href="/app/chat/"><b>Ask Bot Star</b><span class="soft small">Rates, steps, your tickets</span></a>
-<a href="/app/branches/"><b>Find a branch</b><span class="soft small">Map, hours, queue</span></a>
-<a href="/app/help/"><b>Pawn Patrol</b><span class="soft small">Talk to our team</span></a>
-<a href="/app/wrap/"><b>Wrap Star</b><span class="soft small">Your year with us</span></a></div>
+
+<h2>How to renew or get your item back</h2>
+<ol class="steps">
+<li><div><b>Go to any branch</b><span>Bring a valid ID. Open your ticket here and show the QR code at the counter.</span></div></li>
+<li><div><b>Pay at the counter</b><span>The amount is on your ticket. Pay it all to get your item back, or only the interest to renew.</span></div></li>
+<li><div><b>Done</b><span>You take your item home, or your due date moves one month ahead. You get a receipt.</span></div></li>
+</ol>
+
 <h2>Latest activity</h2>
-{% for t in recent %}<div class="row between" style="margin-bottom:8px"><span>{{ t.transaction_type }} <span class="soft small">{{ t.created_at|date:"M d" }}</span></span><span class="mono">{% amt t.amount %}</span></div>{% empty %}<p class="soft">Nothing yet.</p>{% endfor %}
+{% for t in recent %}<div class="row between" style="margin-bottom:10px"><span>{{ t.transaction_type }} <span class="soft small">{{ t.created_at|date:"M d" }}</span></span><b class="mono">{% amt t.amount %}</b></div>{% empty %}<p class="soft">Nothing yet.</p>{% endfor %}
 <button class="btn ghost block install" type="button" style="margin-top:14px">Install Only Pawns on this phone</button>
 {% endblock %}

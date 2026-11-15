@@ -1,9 +1,9 @@
 {% load static %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Staff login - Only Pawns</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Orbitron:wght@600;700&display=swap" rel="stylesheet">
-<script src="{% static 'pawn/js/theme-init.js' %}"></script><link rel="stylesheet" href="{% static 'pawn/css/app.css' %}"><link rel="stylesheet" href="{% static 'pawn/css/glass.css' %}"></head>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="{% static 'pawn/js/theme-init.js' %}"></script><link rel="stylesheet" href="{% static 'pawn/css/app.css' %}"><link rel="stylesheet" href="{% static 'pawn/css/glass.css' %}"><link rel="stylesheet" href="{% static 'pawn/css/pawnshop.css' %}"></head>
 <body>{% include "_backdrop.html" %}<div class="center"><form method="post" class="card login">{% csrf_token %}
-<h1>Only <span style="color:var(--pink)">Pawns</span></h1>
+<img src="{% static 'pawn/icons/logo-badge.png' %}" alt="" width="64" height="64" style="border-radius:16px;margin-bottom:10px"><h1>Only <span style="color:var(--pink)">Pawns</span></h1>
 <p class="soft">Staff sign in. Customers use the <a href="/app/">app</a>.</p>
 {% if error %}<div class="flash error">{{ error }}</div>{% endif %}
 <div class="field"><label for="u">Username</label><input class="in" id="u" name="username" autocomplete="username" autofocus required></div>

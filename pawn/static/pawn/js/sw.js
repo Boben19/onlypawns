@@ -1,7 +1,7 @@
 // Only Pawns service worker: keeps the app shell available offline.
 // Money screens are never cached, only the look of the app and the offline page.
-const CACHE = "onlypawns-v3";
-const SHELL = ["/offline/", "/static/pawn/css/app.css", "/static/pawn/css/glass.css", "/static/pawn/js/theme-init.js", "/static/pawn/js/app.js", "/static/pawn/icons/icon-192.png"];
+const CACHE = "onlypawns-v4";
+const SHELL = ["/offline/", "/static/pawn/css/app.css", "/static/pawn/css/glass.css", "/static/pawn/css/pawnshop.css", "/static/pawn/js/theme-init.js", "/static/pawn/js/app.js", "/static/pawn/icons/icon-192.png", "/static/pawn/icons/logo-badge.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

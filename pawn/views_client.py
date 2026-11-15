@@ -208,7 +208,10 @@ def home(request):
     expired = c.tickets.filter(status__in=("Expired", "For Auction"))
     for t in expired:
         alerts.append((f"{t.ticket_no} has expired and the item is up for auction.", "bad"))
-    return render(request, "app/home.html", {"cards": cards, "alerts": alerts, "recent": c.transactions.select_related("transaction_type")[:4]})
+    total_redeem = sum((d["redeem_total"] for _, d in cards), 0)  # shown on the blue summary card
+    next_due = min((t.maturity_date for t, _ in cards), default=None)
+    return render(request, "app/home.html", {"cards": cards, "alerts": alerts, "total_redeem": total_redeem, "next_due": next_due,
+                                             "recent": c.transactions.select_related("transaction_type")[:4]})
 
 
 @client_only
